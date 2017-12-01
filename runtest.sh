@@ -69,6 +69,8 @@ else
 fi
 updatelog "COMPLETED sleeping for non-failure cosbench"
 
+#---------------------------------------
+# BEGIN the OSD device failure sequence
 # Get target OSD info before stopping
 origOSD=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
 dev=`df |grep ceph-${origOSD} |awk '{print $1}'`
@@ -107,10 +109,26 @@ if [[ `systemctl status ceph-osd@${newOSD} |grep Active:|grep running` ]] ; then
 else
   error_exit "ceph-osd@${newOSD}.service failed to start"
 fi
-#sleep 10m
 
-# watch for recovery to complete
-updatelog "** Waiting for all active+clean pgs:  " 
+# Let things run for 'recoverytime'
+updatelog "Starting sleep ${recoverytime} to monitor cluster re-patriation activity"
+sleep "${recoverytime}"
+
+# Now kill off the background processes
+kill $PIDpollceph
+kill $PIDpbench
+updatelog "Waited for ${recoverytime} and stopped bkgrd processes"
+# END - OSD device failure sequence
+#--------------------------------------
+
+######----------------------
+# NEED TO INSERT in the 'OSD node' failure sequence!
+#####-----------------------
+
+##################################
+# END of I/O workload and monitoring
+# However we want a stable cluster so wait for recovery to complete
+updatelog "** START: Waiting for all active+clean pgs" 
 ceph status > /tmp/ceph.status
 pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
 pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
@@ -120,10 +138,8 @@ while [ $pgcount -ne $pgclean ] ; do
   pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
   pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
 done
-updatelog "** Recovery complete: "
+updatelog "** END: Recovery complete"
 echo " " | mail -s "ceph recovery complete" ekaynar@redhat.com jharriga@redhat.com
 
-# Cleanup background processes
-kill $PIDpollceph
-kill $PIDpbench
+
 
