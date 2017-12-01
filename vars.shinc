@@ -1,0 +1,43 @@
+#---------------------------------------
+# START GLOBAL VARIABLES
+#
+# List of dependencies - verfied by 'chk_dependencies' function
+DEPENDENCIES_arr=(
+  "pbench-user-benchmark"    # monitoring framework
+  "cosbench"                 # I/O workload generator
+  "ceph"                     # ceph cmdline tool
+  "ceph-osd"                 # ceph cmdline tool
+  "systemctl"                # controlling ceph svcs
+)
+
+# Time variables (runtimes for various phases)
+jobtime="60m"
+failuretime="10m"
+recoverytime="60m"
+pollinterval="1m"
+
+# Cluster node names
+OSDnode="osd1"
+MONnode="mon1"
+
+# COSbench vars
+XMLfill="./50fill.xml"
+XMLworkload="./opset1.xml"
+#XMLworkload="./opset2.xml"
+
+# Timestamp logfile
+ts="$(date +%Y%m%d-%H%M%S)"
+
+# Name of the program being run
+PROGNAME=$(basename $0)
+
+# LOGFILE - records steps
+RESULTSDIR="./RESULTS"
+LOGFILE="${RESULTSDIR}/${runMODE}_${deviceMODE}_${ts}.log"
+# Logfile date format, customize it to your wishes
+#   - see man date for help
+DATE='date +%Y/%m/%d:%H:%M:%S'
+
+# END GLOBAL VARIABLES
+#--------------------------------------
+

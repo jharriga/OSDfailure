@@ -1,0 +1,95 @@
+#--------------------------------------
+# FUNCTIONS
+
+function updatelog {
+# Echoes passed string to LOGFILE and stdout
+    echo `$DATE`": $1" 2>&1 | tee -a $LOGFILE
+}
+
+function print_Runtime {
+  echo "Runtime Environment:" | tee -a $LOGFILE
+  echo -n "> "; uname -a | tee -a $LOGFILE
+  if [ -f /etc/redhat-release ]; then
+    echo -n "> "; cat /etc/redhat-release | tee -a $LOGFILE
+  fi
+  echo -n "> "; ceph --version | tee -a $LOGFILE
+
+# Write key variable values to LOGFILE
+  echo "Key Variable Values:" | tee -a $LOGFILE
+  updatelog "> jobtime=${jobtime}"
+  updatelog "> failuretime=${failuretime}"
+  updatelog "> recoverytime=${recoverytime}"
+  updatelog "> polltime=${polltime}"
+  echo "Cluster variable settings:" | tee -a $LOGFILE
+  updatelog "> OSDnode=${OSDnode}"
+  updatelog "> MONnode=${MONnode}"
+  echo "COSbench variable settings:" | tee -a $LOGFILE
+  updatelog "> XMLfill=${XMLfill}"
+  updatelog "> XMLworkload=${XMLworkload}"
+  updatelog "---------------------------------"
+}
+
+function error_exit {
+# Function for exit due to fatal program error
+# Accepts 1 argument:
+#   string containing descriptive error message
+# Copied from - http://linuxcommand.org/wss0150.php
+    echo "${PROGNAME}: ${1:-"Unknown Error"} ABORTING..." 1>&2
+    exit 1
+}
+
+function chk_dependencies {
+  for cmd in "${DEPENDENCIES_arr[@]}"; do
+    command -v $cmd >/dev/null 2>&1 || \
+      error_exit "I require ${cmd} but it's not installed."
+  done
+}
+
+function restore_OSD {
+  # parse the passed vars and assign to local vars
+  the_origOSD=$1
+  the_dev=$2
+  the_weight=$3
+  the_journal=$4
+  uuid=`uuidgen`
+
+# ADMIN steps to address dropped OSD event
+#   - remove dropped OSD
+  ceph osd out osd.${the_origOSD}
+  ceph osd crush remove osd.${the_origOSD}
+  ceph auth del osd.${the_origOSD}
+  ceph osd rm osd.${the_origOSD} ; sleep 5
+  umount -f /var/lib/ceph/osd/ceph-${origOSD}
+#   - create new OSD
+  osd=`ceph osd create ${uuid} ${the_origOSD}` ; sleep 5
+  if [[ ! "${osd}" ]]; then
+    error_exit "restore_OSD failed to create OSD"
+  fi
+  updatelog "created osd.${osd}"
+  mkdir /var/lib/ceph/osd/ceph-${osd} &> /dev/null
+  mount -o noatime ${dev} /var/lib/ceph/osd/ceph-${osd}
+  updatelog "removing prior contents of ${the_dev}"
+  rm -rf /var/lib/ceph/osd/ceph-${osd}/*
+  ceph-osd -i ${osd} --mkfs --mkkey --osd-uuid ${uuid} ; sleep 5
+#   - add new OSD
+  ceph auth add osd.${osd} mon 'allow *' osd 'allow profile osd' -i /var/lib/ceph/osd/ceph-${osd}/keyring
+  ceph osd crush add ${osd} ${the_weight} host=`hostname -s`
+
+# if original journal was softlink, recreate it
+  if [[ $the_journal ]] ; then
+      updatelog "setting journal to original softlink"
+      ceph-osd -i ${osd} --flush-journal
+      rm -f /var/lib/ceph/osd/ceph-${osd}/journal
+      ln -s ${the_journal} /var/lib/ceph/osd/ceph-${osd}/journal
+      ceph-osd -i ${osd} --mkjournal
+  fi
+  chown -R ceph:ceph /var/lib/ceph/osd/ceph-${osd}
+
+  echo "${osd}"
+
+}
+
+
+#
+# END FUNCTIONS
+#--------------------------------------
