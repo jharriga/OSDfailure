@@ -52,7 +52,7 @@ touch $LOGFILE || error_exit "$LINENO: Unable to create LOGFILE."
 updatelog "${PROGNAME} - Created logfile: $LOGFILE"
 
 # Verify that the OSDnode is reachable via ansible
-ansible -m ping "${OSDhostname}"
+ansible all -m ping -i '${OSDhostname},'
 
 #
 # END: Housekeeping
