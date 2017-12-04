@@ -17,8 +17,8 @@ recoverytime="60m"
 pollinterval="1m"
 
 # Cluster node names
-OSDnode="osd1"
-MONnode="mon1"
+OSDhostname="osd1"
+MONhostname="mon1"
 
 # COSbench vars
 XMLfill="./50fill.xml"
