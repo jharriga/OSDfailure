@@ -18,8 +18,7 @@ source "$myPath/functions.shinc"
 [ -z "$1" ] && error_exit "POLLCEPH.sh failed - empty first arg"
 [ -z "$2" ] && error_exit "POLLCEPH.sh failed - empty second arg"
 
-pollinterval=$1
-LOGFILE=$2
+#pollinterval=$1
 
 # update log file with ceph recovery progress
 updatelog "** POLLCEPH started"
