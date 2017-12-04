@@ -52,14 +52,15 @@ touch $LOGFILE || error_exit "$LINENO: Unable to create LOGFILE."
 updatelog "${PROGNAME} - Created logfile: $LOGFILE"
 
 # Verify that the OSDnode is reachable via ansible
-ansible all -m ping -i '${OSDhostname},'
+##ansible all -m ping -i '${OSDhostname},'
 
 #
 # END: Housekeeping
 #--------------------------------------
 
 # Start the COSbench workload
-pbench-user-benchmark cosbench "${XMLworkload}" & #### MODIFY to match Ugur's cmdline
+#pbench-user-benchmark cosbench "${XMLworkload}" & #### MODIFY to match Ugur's cmdline
+sleep 100s &                ## DEBUG
 PIDpbench=$!
 updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" 
 # VERIFY it successfully started
@@ -84,38 +85,10 @@ fi
 #---------------------------------------
 # BEGIN the OSD device failure sequence
 # invoke OSD device failure with ansible
-ansible-playbook "${PLAYBOOKosddevfail}"
+##ansible-playbook "${PLAYBOOKosddevfail}"
 
-#######################
-# TURN THIS INTO ANSIBLE PLAYBOOK
-# Get target OSD info before stopping
-origOSD=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
-dev=`df |grep ceph-${origOSD} |awk '{print $1}'`
-weight=`ceph osd tree|grep "osd.${origOSD} "|awk '{print $2}'`
-journal=`ls -l /var/lib/ceph/osd/ceph-${origOSD}/journal | cut -d\> -f2`
-
-# START>>>> ANSIBLE PLAYBOOK---
-# Issue the OSD stop cmd
-if systemctl stop ceph-osd@${origOSD}; then
-    updatelog "** stopped OSD ${origOSD}"
-else
-    error_exit "failed to stop OSD ${origOSD}"
-fi
-# Wait for failuretime
-sleep "${failuretime}"
-# Perform ADMIN steps to address dropped OSD event
-newOSD=$(restore_OSD "${origOSD}" "${dev}" "${weight}" "${journal}")
-if [[ ! $newOSD ]]; then
-  error_exit "function restore_OSD did not return valid osd"
-fi
-# Start the new OSD
-systemctl start ceph-osd@${newOSD}
-if [[ `systemctl status ceph-osd@${newOSD} |grep Active:|grep running` ]] ; then
-  updatelog "** started new OSD ${newOSD}"
-else
-  error_exit "ceph-osd@${newOSD}.service failed to start"
-fi
-# END<<<< ANSIBLE PLAYBOOK---
+## For now use SSH
+ssh root@"${OSDhostname}" "bash -s" < dropOSD.bash
 
 # Let things run for 'recoverytime'
 updatelog "OSDevice: sleeping ${recoverytime} to monitor cluster re-patriation activity"
@@ -139,7 +112,10 @@ if ! ps -p $PIDpollceph2 > /dev/null; then
     error_exit "Second pollceph.sh FAILED"
 fi
 # invoke OSD node failure with ansible
-ansible-playbook "${PLAYBOOKosdnodefail}"
+##ansible-playbook "${PLAYBOOKosdnodefail}"
+
+## For now use SSH
+ssh root@"${OSDhostname}" "bash -s" < dropOSDNODE.bash
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation activity"
