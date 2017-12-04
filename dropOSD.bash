@@ -6,9 +6,6 @@ if [[ ! -d "$myPath" ]]; then
     myPath="$PWD"
 fi
 
-# Variables
-source "$myPath/vars.shinc"
-
 # Functions
 source "$myPath/functions.shinc"
 
