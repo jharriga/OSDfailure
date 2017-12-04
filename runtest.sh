@@ -88,7 +88,7 @@ fi
 ##ansible-playbook "${PLAYBOOKosddevfail}"
 
 ## For now use SSH
-ssh root@"${OSDhostname}" "bash -s" < dropOSD.bash
+ssh root@"${OSDhostname}" "bash -s" < dropOSDNODE.bash
 
 # Let things run for 'recoverytime'
 updatelog "OSDevice: sleeping ${recoverytime} to monitor cluster re-patriation activity"
@@ -114,8 +114,14 @@ fi
 # invoke OSD node failure with ansible
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
-## For now use SSH
-ssh root@"${OSDhostname}" "bash -s" < dropOSDNODE.bash
+updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${failuretime}"
+reboot="+${failuretime%?}"
+ssh root@"${OSDhostname}" shutdown -h "${reboot}"
+
+# Wait for failuretime
+sleep "${failuretime}"
+
+# OSDnode should be rebooting....
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation activity"
