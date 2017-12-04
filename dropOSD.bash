@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Bring in other script files
 myPath="${BASH_SOURCE%/*}"
