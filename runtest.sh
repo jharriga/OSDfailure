@@ -49,10 +49,13 @@ if [ ! -d $RESULTSDIR ]; then
     error_exit "$LINENO: Unable to create RESULTSDIR."
 fi
 touch $LOGFILE || error_exit "$LINENO: Unable to create LOGFILE."
-updatelog "${PROGNAME} - Created logfile: $LOGFILE"
+updatelog "${PROGNAME} - Created logfile: $LOGFILE" $LOGFILE
 
-# Verify that the OSDnode is reachable via ansible
+# Verify that the OSDnode & MONnode are reachable via ansible
 ##ansible all -m ping -i '${OSDhostname},'
+
+echo -n "> OSDhost is ${OSDhostname} : "; ssh "root@${OSDhostname}" hostname
+echo -n "> MONhost is ${MONhostname} : "; ssh "root@${MONhostname}" hostname
 
 #
 # END: Housekeeping
@@ -60,26 +63,26 @@ updatelog "${PROGNAME} - Created logfile: $LOGFILE"
 
 # Start the COSbench workload
 #pbench-user-benchmark cosbench "${XMLworkload}" & #### MODIFY to match Ugur's cmdline
-sleep 100s &                ## DEBUG
+sleep 100m &           ## DEBUG
 PIDpbench=$!
-updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" 
+updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGFILE
 # VERIFY it successfully started
 sleep 5s
 if ps -p $PIDpbench > /dev/null; then
-    updatelog "SLEEPING ${jobtime} for non-failure cosbench"
+    updatelog "BEGIN: No Failures - start sleeping ${jobtime}" $LOGFILE
     sleep "${jobtime}" 
 else
     error_exit "pbench-user-benchmark cosbench FAILED"
 fi
-updatelog "COMPLETED sleeping for non-failure cosbench"
+updatelog "END: No Failures - completed sleeping" $LOGFILE
 
 # Poll ceph status (in a bkrgd process) 
-./pollceph.sh &
+./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph1=$!
 # VERIFY it successfully started
 sleep 1s
 if ! ps -p $PIDpollceph1 > /dev/null; then
-    error_exit "First pollceph.sh FAILED"
+    error_exit "First pollceph.sh FAILED."
 fi
 
 #---------------------------------------
@@ -88,15 +91,16 @@ fi
 ##ansible-playbook "${PLAYBOOKosddevfail}"
 
 ## For now use SSH
-ssh root@"${OSDhostname}" "bash -s" < dropOSDNODE.bash
+ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${LOGFILE}"
 
 # Let things run for 'recoverytime'
-updatelog "OSDevice: sleeping ${recoverytime} to monitor cluster re-patriation activity"
+
+updatelog "BEGIN: OSDevice - sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
 sleep "${recoverytime}"
 
 # Now kill off the POLLCEPH background process
 kill $PIDpollceph1
-updatelog "Waited for ${recoverytime} and stopped POLLCEPH bkgrd process"
+updatelog "END: OSDevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 # END - OSD device failure sequence
 #--------------------------------------
 
@@ -104,19 +108,20 @@ updatelog "Waited for ${recoverytime} and stopped POLLCEPH bkgrd process"
 # The 'OSD node' failure sequence
 #
 # Poll ceph status (in a bkrgd process) 
-./pollceph.sh &
+./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph2=$!
 # VERIFY it successfully started
 sleep 1s
 if ! ps -p $PIDpollceph2 > /dev/null; then
-    error_exit "Second pollceph.sh FAILED"
+    error_exit "Second pollceph.sh FAILED."
 fi
 # invoke OSD node failure with ansible
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
-updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${failuretime}"
+updatelog "BEGIN: OSDnode - halting" $LOGFILE
 reboottime="+${failuretime%?}"
-ssh root@"${OSDhostname}" shutdown -h "${reboottime}"
+ssh "root@${OSDhostname}" shutdown -h "${reboottime}"
+updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $LOGFILE
 
 # Wait for failuretime
 sleep "${failuretime}"
@@ -124,30 +129,34 @@ sleep "${failuretime}"
 # OSDnode should be rebooting....
 
 # Let things run for 'recoverytime'
-updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation activity"
+updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
 sleep "${recoverytime}"
 
 # Now kill off the background processes: POLLceph and PBENCH-COSbench
 kill $PIDpollceph2
 kill $PIDpbench
-updatelog "Waited for ${recoverytime} and stopped bkgrd processes"
+updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
 #####-----------------------
 
 ##################################
 # END of I/O workload and monitoring
 # However we want a stable cluster so wait for recovery to complete
-updatelog "** START: Waiting for all active+clean pgs" 
-ceph status > /tmp/ceph.status
-pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
-pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
-while [ $pgcount -ne $pgclean ] ; do
-  sleep 1m
-  ceph status > /tmp/ceph.status
-  pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
-  pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
+updatelog "** Cleanup START: Waiting for all active+clean pgs" $LOGFILE
+ssh "root@${MONhostname}" ceph status > /tmp/ceph.status
+#pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
+#pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
+pgcount=`grep pool /tmp/ceph.status |awk '{print $4}'`
+pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
+updatelog "pgcnt=${pgcount}; pgclean=${pgclean}" $LOGFILE
+while [ $pgclean -lt $pgcount ] ; do
+    sleep 1m
+    ssh "root@${MONhostname}" ceph status > /tmp/ceph.status
+    #pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
+    #pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
+    pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
+    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
+    updatelog "pgcnt=${pgcount}; pgclean=${pgclean}" $LOGFILE
 done
-updatelog "** END: Recovery complete"
-echo " " | mail -s "ceph recovery complete" ekaynar@redhat.com jharriga@redhat.com
-
-
+updatelog "** Cleanup END: Recovery complete" $LOGFILE
+echo " " | mail -s "ceph recovery complete" jharriga@redhat.com
 
