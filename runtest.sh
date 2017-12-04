@@ -74,7 +74,7 @@ fi
 updatelog "COMPLETED sleeping for non-failure cosbench"
 
 # Poll ceph status (in a bkrgd process) 
-./pollceph.sh "${pollinterval}" "${LOGFILE}" &
+./pollceph.sh &
 PIDpollceph1=$!
 # VERIFY it successfully started
 sleep 1s
@@ -104,7 +104,7 @@ updatelog "Waited for ${recoverytime} and stopped POLLCEPH bkgrd process"
 # The 'OSD node' failure sequence
 #
 # Poll ceph status (in a bkrgd process) 
-./pollceph.sh "${pollinterval}" "${LOGFILE}" &
+./pollceph.sh &
 PIDpollceph2=$!
 # VERIFY it successfully started
 sleep 1s
@@ -115,8 +115,8 @@ fi
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
 updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${failuretime}"
-reboot="+${failuretime%?}"
-ssh root@"${OSDhostname}" shutdown -h "${reboot}"
+reboottime="+${failuretime%?}"
+ssh root@"${OSDhostname}" shutdown -h "${reboottime}"
 
 # Wait for failuretime
 sleep "${failuretime}"
