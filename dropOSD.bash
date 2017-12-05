@@ -1,18 +1,6 @@
 #!/bin/bash
 # dropOSD.bash   script to drop an OSD device
 
-# check for passed arguments
-[ $# -ne 2 ] && error_exit "dropOSD failed - wrong number of args"
-[ -z "$1" ] && error_exit "dropOSD failed - empty first arg"
-[ -z "$2" ] && error_exit "dropOSD failed - empty second arg"
-
-# Get the passed vars
-failtime=$1
-log=$2
-
-uuid=`uuidgen`
-DATE='date +%Y/%m/%d:%H:%M:%S'
-
 # FUNCTIONS
 function error_exit {
 # Function for exit due to fatal program error
@@ -29,6 +17,18 @@ function updatelog {
 
     echo `$DATE`": $1" 2>&1 | tee -a $logfn
 }
+
+# check for passed arguments
+[ $# -ne 2 ] && error_exit "dropOSD failed - wrong number of args"
+[ -z "$1" ] && error_exit "dropOSD failed - empty first arg"
+[ -z "$2" ] && error_exit "dropOSD failed - empty second arg"
+
+# Get the passed vars
+failtime=$1
+log=$2
+
+uuid=`uuidgen`
+DATE='date +%Y/%m/%d:%H:%M:%S'
 
 #
 # Get target OSD info before stopping
