@@ -36,7 +36,7 @@ ssh "root@${mon}" ceph status > /tmp/ceph.status
 #updatelog "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
 #while [ $pgclean -lt $pgcount ] ; do
 until grep HEALTH_OK /tmp/ceph.status; do
-    cleanPG_cnt=`grep -o '[0-9]\{1,\} active+clean' /tmp/ceph.status`
+#    cleanPG_cnt=`grep -o '[0-9]\{1,\} active+clean' /tmp/ceph.status`
     totPG_cnt=`grep pools /tmp/ceph.status |awk '{print $4}'`
     uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status |awk '{print $1}'`
     updatelog "Total PGs ${totPG_cnt} : unclean PGs ${uncleanPG_cnt}" $log
