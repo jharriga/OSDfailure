@@ -36,7 +36,9 @@ log=$2
 # Get target OSD info before stopping
 origOSD=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
 dev=`df |grep ceph-${origOSD} |awk '{print $1}'`
-weight=`ceph osd tree|grep "osd.${origOSD} "|awk '{print $2}'`
+#weight=`ceph osd tree|grep "osd.${origOSD} "|awk '{print $2}'`
+weight=`ceph osd tree|grep "osd.${origOSD} "|awk '{print $3}'`
+
 journal=`ls -l /var/lib/ceph/osd/ceph-${origOSD}/journal | cut -d\> -f2`
 
 # Issue the OSD stop cmd
@@ -77,7 +79,7 @@ if [[ $journal ]] ; then
     updatelog "dropOSD: setting journal to original softlink" $log
     ceph-osd -i ${newOSD} --flush-journal
     rm -f /var/lib/ceph/osd/ceph-${newOSD}/journal
-    ln -s ${journal} /var/lib/ceph/osd/ceph-${osd}/journal
+    ln -s ${journal} /var/lib/ceph/osd/ceph-${newOSD}/journal
     ceph-osd -i ${newOSD} --mkjournal
 fi
 chown -R ceph:ceph /var/lib/ceph/osd/ceph-${newOSD}
