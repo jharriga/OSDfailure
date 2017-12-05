@@ -141,22 +141,11 @@ updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFIL
 ##################################
 # END of I/O workload and monitoring
 # However we want a stable cluster so wait for recovery to complete
-updatelog "** Cleanup START: Waiting for all active+clean pgs" $LOGFILE
-ssh "root@${MONhostname}" ceph status > /tmp/ceph.status
-#pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
-#pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
-pgcount=`grep pool /tmp/ceph.status |awk '{print $4}'`
-pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
-updatelog "pgcnt=${pgcount}; pgclean=${pgclean}" $LOGFILE
-while [ $pgclean -lt $pgcount ] ; do
-    sleep 1m
-    ssh "root@${MONhostname}" ceph status > /tmp/ceph.status
-    #pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
-    #pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
-    pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
-    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
-    updatelog "pgcnt=${pgcount}; pgclean=${pgclean}" $LOGFILE
-done
+updatelog "** Cleanup START: Waiting for HEALTH_OK" $LOGFILE
+
+# Poll ceph status (in a foregrd process) 
+./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
+
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
 echo " " | mail -s "ceph recovery complete" jharriga@redhat.com
 
