@@ -18,6 +18,8 @@ function updatelog {
     echo `$DATE`": $1" 2>&1 | tee -a $logfn
 }
 
+# Name of the program being run
+PROGNAME=$(basename $0)
 uuid=`uuidgen`
 DATE='date +%Y/%m/%d:%H:%M:%S'
 
