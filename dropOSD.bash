@@ -18,6 +18,9 @@ function updatelog {
     echo `$DATE`": $1" 2>&1 | tee -a $logfn
 }
 
+uuid=`uuidgen`
+DATE='date +%Y/%m/%d:%H:%M:%S'
+
 # check for passed arguments
 [ $# -ne 2 ] && error_exit "dropOSD failed - wrong number of args"
 [ -z "$1" ] && error_exit "dropOSD failed - empty first arg"
@@ -26,9 +29,6 @@ function updatelog {
 # Get the passed vars
 failtime=$1
 log=$2
-
-uuid=`uuidgen`
-DATE='date +%Y/%m/%d:%H:%M:%S'
 
 #
 # Get target OSD info before stopping
