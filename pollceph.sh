@@ -4,20 +4,17 @@
 #   Polls ceph for 'active&clean' status
 #
 
-# Functions
-function logit {
-# Echoes passed string to LOGFILE and stdout
-    echo `$DATE`": $1" 2>&1 | tee -a $2
-}
+# Bring in other script files
+myPath="${BASH_SOURCE%/*}"
+if [[ ! -d "$myPath" ]]; then
+    myPath="$PWD"
+fi
 
-function error_exit {
-# Function for exit due to fatal program error
-# Accepts 1 argument:
-#   string containing descriptive error message
-# Copied from - http://linuxcommand.org/wss0150.php
-    echo "${PROGNAME}: ${1:-"Unknown Error"} ABORTING..." 1>&2
-    exit 1
-}
+# Variables
+source "$myPath/vars.shinc"
+
+# Functions
+source "$myPath/functions.shinc"
 
 # check for passed arguments
 [ $# -ne 3 ] && error_exit "POLLCEPH.sh failed - wrong number of args"
@@ -25,35 +22,31 @@ function error_exit {
 [ -z "$2" ] && error_exit "POLLCEPH.sh failed - empty second arg"
 [ -z "$3" ] && error_exit "POLLCEPH.sh failed - empty third arg"
 
-interval=$1
-log=$2
-mon=$3
+interval=$1          # how long to sleep between polling
+log=$2               # the logfile to write to
+mon=$3               # the MON to run 'ceph status' cmd on
 DATE='date +%Y/%m/%d:%H:%M:%S'
 
 # update log file with ceph recovery progress
-logit "** POLLCEPH started" $log
+updatelog "** POLLCEPH started" $log
 ssh "root@${mon}" ceph status > /tmp/ceph.status
-#pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
-#pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
-pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
-pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
-percent=$((200*$pgclean/$pgcount % 2 + 100*$pgclean/$pgcount))
-logit "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
-while [ $pgclean -lt $pgcount ] ; do
+#pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
+#pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
+#percent=$((200*$pgclean/$pgcount % 2 + 100*$pgclean/$pgcount))
+#updatelog "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
+#while [ $pgclean -lt $pgcount ] ; do
+until grep HEALTH_OK /tmp/ceph.status; do
+    cleanPG_cnt=`grep -o '[0-9]\{1,\} active+clean' /tmp/ceph.status`
+    uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status`
+    updatelog "${cleanPG_cnt} : ${uncleanPG_cnt}" $log
     sleep "${interval}"
     ssh "root@${mon}" ceph status > /tmp/ceph.status
 #    pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
 #    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
-    pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
-    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
-    percent=$((200*$pgclean/$pgcount % 2 + 100*$pgclean/$pgcount))
-    logit "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
+#    pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
+#    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
+#    percent=$((200*$pgclean/$pgcount % 2 + 100*$pgclean/$pgcount))
+#    updatelog "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
 done
-logit "** Recovery completed - POLLCEPH ending" $log
-echo " " | mail -s "POLLCEPH completed" jharriga@redhat.com
-
-
-
-
-
-
+updatelog "** Recovery completed: HEALTH_OK - POLLCEPH ending" $log
+echo " " | mail -s "POLLCEPH completed: HEALTH_OK" jharriga@redhat.com ekaynar@redhat.com
