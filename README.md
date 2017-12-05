@@ -13,5 +13,5 @@ FILE INVENTORY:
 * vars.shinc - global variables
 
 USAGE:
-* Edit 'vars.shinc' for your environment
+* Edit 'vars.shinc' for your environment (OSDhostname & MONhostname)
 * run './runtest.sh'
