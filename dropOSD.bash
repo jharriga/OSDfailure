@@ -51,6 +51,10 @@ fi
 sleep "${failtime}"
 
 # ADMIN steps to address dropped OSD event
+#   - disable scrubbing
+ceph osd set noscrub
+ceph osd set nodeep-scrub
+
 #   - remove dropped OSD
 ceph osd out osd.${origOSD}
 ceph osd crush remove osd.${origOSD}
