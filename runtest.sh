@@ -93,8 +93,11 @@ fi
 ## For now use SSH
 ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${LOGFILE}"
 
-# Let things run for 'recoverytime'
+# Disable scrubbing - per ADMIN Guide
+ceph osd set noscrub
+ceph osd set nodeep-scrub
 
+# Let things run for 'recoverytime'
 updatelog "BEGIN: OSDevice - sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
 sleep "${recoverytime}"
 
@@ -106,6 +109,7 @@ updatelog "END: OSDevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 
 ######---------------------------------
 # The 'OSD node' failure sequence
+# scrubbing is already disabled
 #
 # Poll ceph status (in a bkrgd process) 
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
@@ -118,6 +122,7 @@ fi
 # invoke OSD node failure with ansible
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
+# shutdown the OSDhost and set for reboot
 updatelog "BEGIN: OSDnode - halting" $LOGFILE
 reboottime="+${failuretime%?}"
 ssh "root@${OSDhostname}" shutdown -h "${reboottime}"
@@ -126,7 +131,7 @@ updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $L
 # Wait for failuretime
 sleep "${failuretime}"
 
-# OSDnode should be rebooting....
+# OSDnode should now be rebooting....
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
@@ -146,6 +151,12 @@ updatelog "** Cleanup START: Waiting for HEALTH_OK" $LOGFILE
 # Poll ceph status (in a foregrd process) 
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
+# Cluster is HEALTH_OK
+# Enable scrubbing
+ceph osd unset noscrub
+ceph osd unset nodeep-scrub
+
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
 echo " " | mail -s "ceph recovery complete" jharriga@redhat.com
 
+# END
