@@ -48,5 +48,5 @@ while grep HEALTH_WARN /tmp/ceph.status; do
     ssh "root@${mon}" ceph status > /tmp/ceph.status
 done
 
-updatelog "** Recovery completed: HEALTH_OK - POLLCEPH ending" $log
-echo " " | mail -s "POLLCEPH completed: HEALTH_OK" jharriga@redhat.com ekaynar@redhat.com
+updatelog "** Recovery completed: POLLCEPH ending" $log
+echo " " | mail -s "POLLCEPH completed" jharriga@redhat.com ekaynar@redhat.com
