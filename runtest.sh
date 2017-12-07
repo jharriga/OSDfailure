@@ -149,7 +149,7 @@ updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFIL
 # However we want a stable cluster so wait for recovery to complete
 updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LOGFILE
 
-# Poll ceph status (in a foregrd process) 
+# Poll ceph status (in a blocking foregrd process) 
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
 # Cluster is recovered. cleanPGs == totalPGs.
@@ -157,6 +157,11 @@ updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LO
 ceph osd unset noscrub
 ceph osd unset nodeep-scrub
 
+# Call pollceph one final time, expecting HEALTH_OK and immediate return
+sleep 1
+./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
+
+# update logfile with completion timestamp and end email notifications
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
 echo " " | mail -s "ceph recovery complete" jharriga@redhat.com ekaynar@redhat.com
 
