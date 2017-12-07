@@ -55,7 +55,7 @@ updatelog "${PROGNAME} - Created logfile: $LOGFILE" $LOGFILE
 ##ansible all -m ping -i '${OSDhostname},'
 host1=`ssh "root@${OSDhostname}" hostname`
 updatelog "> OSDhost is ${OSDhostname} : ${host1}" $LOGFILE
-host2=`ssh "root@{MONhostname}" hostname`
+host2=`ssh "root@${MONhostname}" hostname`
 updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 
 #
@@ -77,15 +77,6 @@ else
 fi
 updatelog "END: No Failures - completed sleeping" $LOGFILE
 
-# Poll ceph status (in a bkrgd process) 
-./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
-PIDpollceph1=$!
-# VERIFY it successfully started
-sleep 1s
-if ! ps -p $PIDpollceph1 > /dev/null; then
-    error_exit "First pollceph.sh FAILED."
-fi
-
 #---------------------------------------
 # BEGIN the OSD device failure sequence
 # invoke OSD device failure with ansible
@@ -97,6 +88,15 @@ ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${LOGFILE}"
 # Disable scrubbing - per RHCS ADMIN Guide
 ceph osd set noscrub
 ceph osd set nodeep-scrub
+
+# Poll ceph status (in a bkrgd process) 
+./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
+PIDpollceph1=$!
+# VERIFY it successfully started
+sleep 1s
+if ! ps -p $PIDpollceph1 > /dev/null; then
+    error_exit "First pollceph.sh FAILED."
+fi
 
 # Let things run for 'recoverytime'
 updatelog "BEGIN: OSDdevice - sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
