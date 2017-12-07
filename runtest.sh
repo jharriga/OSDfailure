@@ -126,7 +126,7 @@ fi
 # shutdown the OSDhost and set for delayed reboot
 updatelog "BEGIN: OSDnode - halting" $LOGFILE
 reboottime="+${failuretime%?}"
-ssh "root@${OSDhostname}" shutdown -h "${reboottime}"
+ssh "root@${OSDhostname}" shutdown -r "${reboottime}"
 updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $LOGFILE
 
 # Wait for failuretime
