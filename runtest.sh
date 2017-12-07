@@ -53,9 +53,10 @@ updatelog "${PROGNAME} - Created logfile: $LOGFILE" $LOGFILE
 
 # Verify that the OSDnode & MONnode are reachable via ansible
 ##ansible all -m ping -i '${OSDhostname},'
-
-echo -n "> OSDhost is ${OSDhostname} : "; ssh "root@${OSDhostname}" hostname
-echo -n "> MONhost is ${MONhostname} : "; ssh "root@${MONhostname}" hostname
+host1=`ssh "root@${OSDhostname}" hostname`
+updatelog "> OSDhost is ${OSDhostname} : ${host1}" $LOGFILE
+host2=`ssh "root@{MONhostname}" hostname`
+updatelog "> MONhost is ${MONhostname} : ${host2} $LOGFILE
 
 #
 # END: Housekeeping
@@ -93,17 +94,17 @@ fi
 ## For now use SSH
 ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${LOGFILE}"
 
-# Disable scrubbing - per ADMIN Guide
+# Disable scrubbing - per RHCS ADMIN Guide
 ceph osd set noscrub
 ceph osd set nodeep-scrub
 
 # Let things run for 'recoverytime'
-updatelog "BEGIN: OSDevice - sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
+updatelog "BEGIN: OSDdevice - sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
 sleep "${recoverytime}"
 
 # Now kill off the POLLCEPH background process
 kill $PIDpollceph1
-updatelog "END: OSDevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
+updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 # END - OSD device failure sequence
 #--------------------------------------
 
@@ -122,7 +123,7 @@ fi
 # invoke OSD node failure with ansible
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
-# shutdown the OSDhost and set for reboot
+# shutdown the OSDhost and set for delayed reboot
 updatelog "BEGIN: OSDnode - halting" $LOGFILE
 reboottime="+${failuretime%?}"
 ssh "root@${OSDhostname}" shutdown -h "${reboottime}"
@@ -137,7 +138,7 @@ sleep "${failuretime}"
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
 sleep "${recoverytime}"
 
-# Now kill off the background processes: POLLceph and PBENCH-COSbench
+# Now kill off the background processes: POLLceph and PBENCH-COSbench (I/O workload)
 kill $PIDpollceph2
 kill $PIDpbench
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
@@ -146,17 +147,17 @@ updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFIL
 ##################################
 # END of I/O workload and monitoring
 # However we want a stable cluster so wait for recovery to complete
-updatelog "** Cleanup START: Waiting for HEALTH_OK" $LOGFILE
+updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LOGFILE
 
 # Poll ceph status (in a foregrd process) 
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
-# Cluster is HEALTH_OK
-# Enable scrubbing
+# Cluster is recovered. cleanPGs == totalPGs.
+# Re-enable scrubbing
 ceph osd unset noscrub
 ceph osd unset nodeep-scrub
 
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
-echo " " | mail -s "ceph recovery complete" jharriga@redhat.com
+echo " " | mail -s "ceph recovery complete" jharriga@redhat.com ekaynar@redhat.com
 
 # END
