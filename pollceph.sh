@@ -30,24 +30,23 @@ DATE='date +%Y/%m/%d:%H:%M:%S'
 # update log file with ceph recovery progress
 updatelog "** POLLCEPH started" $log
 ssh "root@${mon}" ceph status > /tmp/ceph.status
-#pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
-#pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
-#percent=$((200*$pgclean/$pgcount % 2 + 100*$pgclean/$pgcount))
-#updatelog "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
-#while [ $pgclean -lt $pgcount ] ; do
-until grep HEALTH_OK /tmp/ceph.status; do
-#    cleanPG_cnt=`grep -o '[0-9]\{1,\} active+clean' /tmp/ceph.status`
-    totPG_cnt=`grep pools /tmp/ceph.status |awk '{print $4}'`
-    uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status |awk '{print $1}'`
+
+#until grep HEALTH_OK /tmp/ceph.status; do
+while grep HEALTH_WARN /tmp/ceph.status; do
+    totPG_cnt=`grep -o '[0-9]\{1,\} pools, [0-9]\{1,\} pgs' /tmp/ceph.status | \
+      awk '{print $3}'`
+    cleanPG_cnt=`grep -o '[0-9]\{1,\} active+clean' /tmp/ceph.status | \
+      awk '{print $1}'`
+    # Test that all PGs are clean - if so exit the while loop
+    if [ "$cleanPG_cnt" -eq "$totPG_cnt" ]; then
+        break;
+    fi
+    uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status | \
+      awk '{print $1}'`
     updatelog "Total PGs ${totPG_cnt} : unclean PGs ${uncleanPG_cnt}" $log
     sleep "${interval}"
     ssh "root@${mon}" ceph status > /tmp/ceph.status
-#    pgcount=`grep pgmap /tmp/ceph.status |awk '{print $3}'`
-#    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $1}'`
-#    pgcount=`grep pools /tmp/ceph.status |awk '{print $4}'`
-#    pgclean=`grep ' active+clean$' /tmp/ceph.status |awk '{print $2}'`
-#    percent=$((200*$pgclean/$pgcount % 2 + 100*$pgclean/$pgcount))
-#    updatelog "pgcnt=${pgcount}; pgclean=${pgclean}; percent=${percent}" $log
 done
+
 updatelog "** Recovery completed: HEALTH_OK - POLLCEPH ending" $log
 echo " " | mail -s "POLLCEPH completed: HEALTH_OK" jharriga@redhat.com ekaynar@redhat.com
