@@ -56,7 +56,7 @@ updatelog "${PROGNAME} - Created logfile: $LOGFILE" $LOGFILE
 host1=`ssh "root@${OSDhostname}" hostname`
 updatelog "> OSDhost is ${OSDhostname} : ${host1}" $LOGFILE
 host2=`ssh "root@{MONhostname}" hostname`
-updatelog "> MONhost is ${MONhostname} : ${host2} $LOGFILE
+updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 
 #
 # END: Housekeeping
