@@ -11,7 +11,7 @@ function error_exit {
     exit 1
 }
 
-function updatelog {
+function logit {
 # Echoes passed string to LOGFILE and stdout
     logfn=$2
 
@@ -31,6 +31,7 @@ DATE='date +%Y/%m/%d:%H:%M:%S'
 # Get the passed vars
 failtime=$1
 log=$2
+touch $log           # start the logfile
 
 #
 # Get target OSD info before stopping
@@ -43,7 +44,7 @@ journal=`ls -l /var/lib/ceph/osd/ceph-${origOSD}/journal | cut -d\> -f2`
 
 # Issue the OSD stop cmd
 if systemctl stop ceph-osd@${origOSD}; then
-    updatelog "dropOSD: stopped OSD ${origOSD}" $log
+    logit "dropOSD: stopped OSD ${origOSD}" $log
 else
     error_exit "dropOSD: failed to stop OSD ${origOSD}"
 fi
@@ -63,10 +64,10 @@ newOSD=`ceph osd create ${uuid} ${origOSD}` ; sleep 5
 if [[ ! "${newOSD}" ]]; then
     error_exit "dropOSD: Failed to create OSD"
 fi
-updatelog "dropOSD: created osd.${newOSD}" $log
+logit "dropOSD: created osd.${newOSD}" $log
 mkdir /var/lib/ceph/osd/ceph-${newOSD} &> /dev/null
 mount -o noatime ${dev} /var/lib/ceph/osd/ceph-${newOSD}
-updatelog "dropOSD: removing prior contents of ${dev}" $log
+logit "dropOSD: removing prior contents of ${dev}" $log
 rm -rf /var/lib/ceph/osd/ceph-${newOSD}/*
 ceph-osd -i ${newOSD} --mkfs --mkkey --osd-uuid ${uuid} ; sleep 5
 
@@ -76,7 +77,7 @@ ceph osd crush add ${newOSD} ${weight} host=`hostname -s`
 
 # if original journal was softlink, recreate it
 if [[ $journal ]] ; then
-    updatelog "dropOSD: setting journal to original softlink" $log
+    logit "dropOSD: setting journal to original softlink" $log
     ceph-osd -i ${newOSD} --flush-journal
     rm -f /var/lib/ceph/osd/ceph-${newOSD}/journal
     ln -s ${journal} /var/lib/ceph/osd/ceph-${newOSD}/journal
@@ -87,7 +88,7 @@ chown -R ceph:ceph /var/lib/ceph/osd/ceph-${newOSD}
 # Start the new OSD
 systemctl start ceph-osd@${newOSD}
 if [[ `systemctl status ceph-osd@${newOSD} |grep Active:|grep running` ]] ; then
-    updatelog "dropOSD: started new OSD ${newOSD}" $log
+    logit "dropOSD: started new OSD ${newOSD}" $log
 else
     error_exit "ceph-osd@${newOSD}.service failed to start"
 fi
