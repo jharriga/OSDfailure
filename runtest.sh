@@ -143,6 +143,7 @@ sleep "${failuretime}"
 
 # Reboot OSDnode
 ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power on
+updatelog "OSDhostname ${OSDhostname} powered on. Rebooting..." $LOGFILE
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
