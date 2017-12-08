@@ -130,20 +130,29 @@ fi
 # invoke OSD node failure with ansible
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
+# take the ifaces down  (40Gb NICs are ens3f1 and ens3f0)
+updatelog "IFDOWN: Taking ifaces down on ${OSDhostname}" $LOGFILE
+ssh "root@${OSDhostname}" ifdown ens3f0
+ssh "root@${OSDhostname}" ifdown ens3f1
+
 # shutdown the OSDhost and set for delayed reboot
-updatelog "BEGIN: OSDnode - halting" $LOGFILE
-reboottime="+${failuretime%?}"
-#ssh "root@${OSDhostname}" shutdown -r "${reboottime}"
-ssh "root@${OSDhostname}" halt
+#updatelog "BEGIN: OSDnode - halting" $LOGFILE
+#reboottime="+${failuretime%?}"
+#ssh "root@${OSDhostname}" halt
 #updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $LOGFILE
-updatelog "OSDhostname ${OSDhostname} halted. Power reset in ${failuretime}" $LOGFILE
+#updatelog "OSDhostname ${OSDhostname} halted. Power reset in ${failuretime}" $LOGFILE
 
 # Wait for failuretime
 sleep "${failuretime}"
 
 # Reboot OSDnode
-ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
-updatelog "OSDhostname ${OSDhostname} ipmi power reset. Rebooting..." $LOGFILE
+#ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
+#updatelog "OSDhostname ${OSDhostname} ipmi power reset. Rebooting..." $LOGFILE
+
+# bring the ifaces up  (40Gb NICs are ens3f1 and ens3f0)
+updatelog "IFUP: Bringing ifaces up on ${OSDhostname}" $LOGFILE
+ssh "root@${OSDhostname}" ifup ens3f0
+ssh "root@${OSDhostname}" ifup ens3f1
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
