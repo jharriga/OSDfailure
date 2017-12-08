@@ -167,6 +167,8 @@ updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFIL
 ##################################
 # END of I/O workload and monitoring
 # However we want a stable cluster so wait for recovery to complete
+# NOTE: two ceph vars can be modified to make recovery ops more aggressive (presumably faster)
+#   See - http://lists.ceph.com/pipermail/ceph-users-ceph.com/2015-June/001895.html
 updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LOGFILE
 
 # Poll ceph status (in a blocking foregrd process) 
