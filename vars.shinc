@@ -15,9 +15,9 @@ failuretime="10m"
 recoverytime="60m"
 pollinterval="1m"
 
-# Cluster node names
-OSDhostname="c04-h05-6048r"
-MONhostname="c04-h33-6018r"
+# Ceph cluster node IP addresses
+OSDhostname="10.12.70.112"               # 1GbE for c04-h05-6048r
+MONhostname="10.12.70.141"               # 1GbE for c04-h33-6018r
 
 # COSbench vars
 XMLfill="./50fill.xml"
