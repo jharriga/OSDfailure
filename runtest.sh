@@ -79,11 +79,18 @@ updatelog "END: No Failures - completed sleeping" $LOGFILE
 
 #---------------------------------------
 # BEGIN the OSD device failure sequence
-# invoke OSD device failure with ansible
+#   could invoke OSD device failure with ansible
 ##ansible-playbook "${PLAYBOOKosddevfail}"
 
-## For now use SSH
-ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${LOGFILE}"
+# set the remote logfile name
+logbase=$(basename $LOGFILE)
+logtmp="/tmp/${logbase}"
+## Drop the OSDdevice using SSH
+ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${logtmp}"
+# bring the remote logfile back and append to LOGFILE
+scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
+cat "${logtmp}" >> $LOGFILE
+rm -f "${logtmp}"
 
 # Disable scrubbing - per RHCS ADMIN Guide
 ceph osd set noscrub
