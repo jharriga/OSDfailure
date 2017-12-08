@@ -5,6 +5,7 @@
 DEPENDENCIES_arr=(
   "pbench-user-benchmark"    # monitoring framework
   "ceph"                     # ceph cmdline tool
+  "ipmitool"                 # used to shutdown/reset OSDnode
   "systemctl"                # controlling ceph svcs
 )
 
