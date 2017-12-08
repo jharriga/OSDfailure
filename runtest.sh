@@ -133,13 +133,16 @@ fi
 # shutdown the OSDhost and set for delayed reboot
 updatelog "BEGIN: OSDnode - halting" $LOGFILE
 reboottime="+${failuretime%?}"
-ssh "root@${OSDhostname}" shutdown -r "${reboottime}"
-updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $LOGFILE
+#ssh "root@${OSDhostname}" shutdown -r "${reboottime}"
+ssh "root@${OSDhostname}" halt
+#updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $LOGFILE
+updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${failuretime}" $LOGFILE
 
 # Wait for failuretime
 sleep "${failuretime}"
 
-# OSDnode should now be rebooting....
+# Reboot OSDnode
+ipmitool -I lanplus -U root -P 100yard- -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
