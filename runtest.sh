@@ -62,9 +62,11 @@ updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 # END: Housekeeping
 #--------------------------------------
 
-# Start the COSbench workload
-#pbench-user-benchmark cosbench "${XMLworkload}" & #### MODIFY to match Ugur's cmdline
+# Start the COSbench I/O workload
+#pbench-user-benchmark "./cos.sh hybrid.xml" &
 sleep 100m &           ## DEBUG
+updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
+
 PIDpbench=$!
 updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGFILE
 # VERIFY it successfully started
@@ -163,6 +165,10 @@ kill $PIDpollceph2
 kill $PIDpbench
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
 #####-----------------------
+
+dt=$(get_time)
+mv /var/lib/pbench-agent/pbench-user-benchmark* /var/www/html/pub/FS.3rep.$dt
+updatelog "END: Pbench is completed and folder is moved into /var/ww/html/pub" $LOGFILE
 
 ##################################
 # END of I/O workload and monitoring
