@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<workload name="50fill" description="RGW failure test">
+
+
+<!-- Initialization -->
+  <storage type="swift" config="timeout=600000" retry="3"/>
+  <auth type="swauth" config="username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http://rgw:8080/auth/1.0" />
+
+  <workflow>
+
+<!-- Initialization -->
+   <workstage name="init_containers">
+      <work type="init" workers="1" config="containers=r(1,100)"/>
+    </workstage>
+
+
+<!-- client1 write 64M 64K 1G files	 -->
+
+ <workstage name="filling_cluster">
+         <work type="prepare" workers="192" config="containers=r(1,40);objects=r(1,4020);sizes=c(64)KB" >
+<auth type="swauth" config="username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http://rgw:8080/auth/1.0" />
+        </work>
+         <work type="prepare" workers="192" config="containers=r(41,80);objects=r(1,4020);sizes=c(64)MB" >
+<auth type="swauth" config="username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http://rgw:8080/auth/1.0" />
+        </work>
+         <work type="prepare" workers="192" config="containers=r(81,100);objects=r(1,4020);sizes=c(1)GB" >
+<auth type="swauth" config="username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http://rgw:8080/auth/1.0" />
+        </work>
+    </workstage>
+<!--	<auth type="swauth" config="username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http://rgw:8080/auth/1.0" />
+-->	
+
+
+  </workflow>
+
+</workload>
