@@ -20,7 +20,7 @@
      -->
 
  <workstage name="no_failure">
-         <work name="reading" workers="48" runtime="3600" >
+         <work name="reading" workers="48" runtime="3605" >
          <operation name="64KB_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(4020,6040);sizes=c(64)KB"  />
          <operation name="64MB_write" type="write" ratio="20" config="containers=u(41,80);objects=u(4020,6040);sizes=c(64)MB"  />
          <operation name="1GB_write" type="write" ratio="20" config="containers=u(81,100);objects=u(4020,6040);sizes=c(1)GB"  />
@@ -36,7 +36,7 @@
  </workstage>
 
  <workstage name="osd_failure">
-         <work name="reading" workers="48" runtime="3600" >
+         <work name="reading" workers="48" runtime="4201" >
          <operation name="64KB_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(6040,8040);sizes=c(64)KB"  />
          <operation name="64MB_write" type="write" ratio="20" config="containers=u(41,80);objects=u(6040,8040);sizes=c(64)MB"  />
          <operation name="1GB_write" type="write" ratio="20" config="containers=u(81,100);objects=u(6040,8040);sizes=c(1)GB"  />
@@ -52,7 +52,7 @@
  </workstage>
 
  <workstage name="node_failure">
-         <work name="reading" workers="48" runtime="3600" >
+         <work name="reading" workers="48" runtime="4201" >
          <operation name="64KB_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(8040,10040);sizes=c(64)KB"  />
          <operation name="64MB_write" type="write" ratio="20" config="containers=u(41,80);objects=u(8040,10040);sizes=c(64)MB"  />
          <operation name="1GB_write" type="write" ratio="20" config="containers=u(81,100);objects=u(8040,10040);sizes=c(1)GB"  />
