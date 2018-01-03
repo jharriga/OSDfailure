@@ -11,10 +11,10 @@ if [[ ! -d "$myPath" ]]; then
 fi
 
 # Variables
-source "$myPath/vars.shinc"
+source "$myPath/../vars.shinc"
 
 # Functions
-source "$myPath/functions.shinc"
+source "$myPath/../Utils/functions.shinc"
 
 # check for passed arguments
 [ $# -ne 3 ] && error_exit "POLLCEPH.sh failed - wrong number of args"
