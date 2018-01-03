@@ -9,7 +9,13 @@ DEPENDENCIES_arr=(
   "systemctl"                # controlling ceph svcs
 )
 
-# Time variables (runtimes for various phases)
+# PREPARE.sh variables
+prepareXML="IOworkloads/prepare.xml"
+prepareWORKERS=192
+preparePTYPE=rep             # rep OR ec
+prepareOBJECTS=4020
+
+# RUNTEST.sh - runtimes for various phases)
 jobtime="60m"
 failuretime="10m"
 recoverytime="60m"
@@ -25,6 +31,7 @@ OSDhostname="10.12.70.112"               # 1GbE for c04-h05-6048r
 MONhostname="10.12.70.141"               # 1GbE for c04-h33-6018r
 
 # COSbench vars
+cosPATH="/root/0.42"
 XMLfill="./50fill.xml"
 XMLworkload="./opset1.xml"
 #XMLworkload="./opset2.xml"
