@@ -15,6 +15,11 @@ failuretime="10m"
 recoverytime="60m"
 pollinterval="1m"
 
+# DEBUG time values (for faster runtimes)
+#jobtime="5m"
+#failuretime="5m"
+#recoverytime="5m"
+
 # Ceph cluster node IP addresses
 OSDhostname="10.12.70.112"               # 1GbE for c04-h05-6048r
 MONhostname="10.12.70.141"               # 1GbE for c04-h33-6018r
