@@ -1,6 +1,37 @@
 #---------------------------------------
 # START GLOBAL VARIABLES
 #
+
+# PREPARE.sh variables
+prepareXML="IOworkloads/prepare.xml"
+prepareWORKERS=192
+prepareOBJECTS=4020
+pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default.rgw.control" \
+          "default.rgw.gc" "default.rgw.buckets.data" "default.rgw.buckets.index" "default.rgw.buckets.extra" \
+          "default.rgw.log" "default.rgw.meta" "default.rgw.intent-log" "default.rgw.usage" "default.rgw.users" \
+          "default.rgw.users.email" "default.rgw.users.swift" "default.rgw.users.uid")
+preparePTYPE=rep             # Must be rep OR ec
+if [ $preparePTYPE == "rep" ]; then
+    REPLICATION="rep"
+    k=0
+    m=0
+    pg_data=8192
+    pg_index=256
+    pg=256
+    fast_read=0
+elif [ $preparePTYPE == "ec" ]; then
+    REPLICATION="ec"
+    k=4
+    m=2
+    pg_data=4096
+    pg_index=256
+    pg=256
+    fast_read=0
+else
+    echo "Pool type needs to be defined as rep or ec in vars.shinc"; exit
+fi
+
+# RUNTEST.sh vars
 # List of dependencies - verfied by 'chk_dependencies' function
 DEPENDENCIES_arr=(
   "pbench-user-benchmark"    # monitoring framework
@@ -8,20 +39,16 @@ DEPENDENCIES_arr=(
   "ipmitool"                 # used to shutdown/reset OSDnode
   "systemctl"                # controlling ceph svcs
 )
+# Runtimes for various phases
+unittime="m"                 # minutes
+jobtime="60"
+failuretime="10"
+recoverytime="60"
+pollinterval="1"
+sleeptime="1"                # CONSTANT always in seconds
+seconds_rt=$(60 * ($jobtime + $failuretime) + $sleeptime)
 
-# PREPARE.sh variables
-prepareXML="IOworkloads/prepare.xml"
-prepareWORKERS=192
-preparePTYPE=rep             # rep OR ec
-prepareOBJECTS=4020
-
-# RUNTEST.sh - runtimes for various phases)
-jobtime="60m"
-failuretime="10m"
-recoverytime="60m"
-pollinterval="1m"
-
-# DEBUG time values (for faster runtimes)
+# DEBUG - alternative time values for faster runtimes
 #jobtime="5m"
 #failuretime="5m"
 #recoverytime="5m"
