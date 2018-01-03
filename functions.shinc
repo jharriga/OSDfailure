@@ -48,6 +48,11 @@ function chk_dependencies {
   done
 }
 
+function get_time() {
+  date |awk '{print $2$3"."$4}'
+}
+
+
 #
 # END FUNCTIONS
 #--------------------------------------
