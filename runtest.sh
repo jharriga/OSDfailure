@@ -35,7 +35,7 @@ fi
 source "$myPath/vars.shinc"
 
 # Functions
-source "$myPath/functions.shinc"
+source "$myPath/Utils/functions.shinc"
 
 #--------------------------------------
 # Housekeeping
@@ -63,7 +63,7 @@ updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 #--------------------------------------
 
 # Start the COSbench I/O workload
-#pbench-user-benchmark "./cos.sh hybrid.xml" &
+#pbench-user-benchmark "./cos.sh ${RUNTESTxml}" &
 sleep 100m &           ## DEBUG
 updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
 
@@ -134,8 +134,8 @@ fi
 
 # take the ifaces down  (40Gb NICs are ens3f1 and ens3f0)
 updatelog "IFDOWN: Taking ifaces down on ${OSDhostname}" $LOGFILE
-ssh "root@${OSDhostname}" ifdown ens3f0
-ssh "root@${OSDhostname}" ifdown ens3f1
+ssh "root@${OSDhostname}" ifdown "${OSDiface1}"
+ssh "root@${OSDhostname}" ifdown "${OSDiface2}"
 
 # shutdown the OSDhost and set for delayed reboot
 #updatelog "BEGIN: OSDnode - halting" $LOGFILE
@@ -153,8 +153,8 @@ sleep "${failuretime}"
 
 # bring the ifaces up  (40Gb NICs are ens3f1 and ens3f0)
 updatelog "IFUP: Bringing ifaces up on ${OSDhostname}" $LOGFILE
-ssh "root@${OSDhostname}" ifup ens3f0
-ssh "root@${OSDhostname}" ifup ens3f1
+ssh "root@${OSDhostname}" ifup "${OSDiface1}"
+ssh "root@${OSDhostname}" ifup "${OSDiface2}"
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
@@ -166,9 +166,8 @@ kill $PIDpbench
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
 #####-----------------------
 
-dt=$(get_time)
-mv /var/lib/pbench-agent/pbench-user-benchmark* /var/www/html/pub/FS.3rep.$dt
-updatelog "END: Pbench is completed and folder is moved into /var/ww/html/pub" $LOGFILE
+mv /var/lib/pbench-agent/pbench-user-benchmark* /var/www/html/pub/run.$ts
+updatelog "END: Pbench dir moved to /var/www/html/pub/run.$ts" $LOGFILE
 
 ##################################
 # END of I/O workload and monitoring
