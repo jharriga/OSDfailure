@@ -26,8 +26,8 @@ fi
 cp "${PREPAREtemplate}" "${PREPARExml}"
 
 let index=0
-for origValue in "${FCkeys_arr[@]}"; do
-    newValue="${FCvalues_arr[index]}"
+for origValue in "${PCkeys_arr[@]}"; do
+    newValue="${PCvalues_arr[index]}"
     sed -i "s/${origValue}/${newValue}/g" $PREPARExml
     index=$(( $index + 1 ))
 done
