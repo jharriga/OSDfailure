@@ -9,12 +9,12 @@ FILE INVENTORY:
 * runtest.sh - main driver script which executes COSbench and injects failures
 * vars.shinc - global variables
 * writeXMLs.sh
-* prepare.sh
-* XMLtemplates
+* prepCluster.sh
+* XMLtemplates (directory)
 > TMPL_deletewrite.xml
 > TMPL_fillCluster.xml
 > TMPL_hybrid.xml
-* Utils
+* Utils (directory)
 > dropOSD.bash - script which is run on OSDhostname (drops an OSD device)
 > functions.shinc - collection of functions
 > pollceph.sh - script run on MONhostname (polls ceph status)
@@ -23,5 +23,5 @@ FILE INVENTORY:
 USAGE:
 * Edit 'vars.shinc' for your environment (OSDhostname & MONhostname)
 * run 'writeXMLs.sh'  <-- create COSbench workload files
-* run 'prepare.sh'    <-- create pools and fill the cluster
+* run 'prepCluster.sh'    <-- create pools and fill the cluster
 * run './runtest.sh'  <-- run the test and record results
