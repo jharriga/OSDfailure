@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<workload name="fillCluster" description="RGW failure testing">
+
+
+<!-- Initialization -->
+  <storage type="swift" config="PREPAREtimeout" retry="PREPAREretry"/>
+  <auth type="swauth" config="PREPAREconfig" />
+
+  <workflow>
+
+<!-- Initialization -->
+   <workstage name="init_containers">
+      <work type="init" workers="1" config="containers=r(1,100)"/>
+    </workstage>
+
+
+<!-- client1 prepare using PREPAREsizes obj sizes from vars.shinc -->
+
+ <workstage name="filling_cluster">
+         <work type="prepare" workers="PREPAREworkers" config="containers=r(1,40);objects=r(1,4020);sizes=PREPAREsizes1" >
+<auth type="swauth" config="PREPAREconfig" />
+        </work>
+         <work type="prepare" workers="PREPAREworkers" config="containers=r(41,80);objects=r(1,4020);sizes=PREPAREsizes2" >
+<auth type="swauth" config="PREPAREconfig" />
+        </work>
+         <work type="prepare" workers="PREPAREworkers" config="containers=r(81,100);objects=r(1,4020);sizes=PREPAREsizes3" >
+<auth type="swauth" config="PREPAREconfig" />
+        </work>
+    </workstage>
+
+
+  </workflow>
+
+</workload>
