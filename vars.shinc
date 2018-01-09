@@ -30,10 +30,10 @@ runtime_sec=$(( time_mult * (jobtime + failuretime) + sleeptime ))
 
 #------------------------
 # writeXML.sh variables
-PREPAREtemplate="XMLtemplates/TMPL_fillCluster.xml"
-PREPARExml="fillCluster.xml"
+PREPAREtemplate="XMLtemplates/TMPL_prepCluster.xml"
+PREPARExml="prepCluster.xml"
 # fillCluster: pre-existing keys in the template file
-declare -a FCkeys_arr=("FCstorage_type"
+declare -a PCkeys_arr=("PREPAREstorage_type"
                        "PREPAREtimeout"
                        "PREPAREretry"
                        "PREPAREauth_type"
@@ -43,7 +43,7 @@ declare -a FCkeys_arr=("FCstorage_type"
                        "PREPAREsizes2"
                        "PREPAREsizes3"
                        )
-declare -a FCvalues_arr=("swift"           # storage type
+declare -a PCvalues_arr=("swift"           # storage type
                          "60000"           # timeout
                          "3"               # retries
                          "swauth"          # auth_type
@@ -84,7 +84,7 @@ declare -a RTvalues_arr=("swift"          # storage_type
                          )
  
 #------------------------
-# PREPARE.sh variables
+# PREPCLUSTER.sh variables
 pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default.rgw.control" \
           "default.rgw.gc" "default.rgw.buckets.data" "default.rgw.buckets.index" "default.rgw.buckets.extra" \
           "default.rgw.log" "default.rgw.meta" "default.rgw.intent-log" "default.rgw.usage" "default.rgw.users" \
