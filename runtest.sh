@@ -70,7 +70,7 @@ updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual
 PIDpbench=$!
 updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGFILE
 # VERIFY it successfully started
-sleep 5s
+sleep "${sleeptime}"
 if ps -p $PIDpbench > /dev/null; then
     updatelog "BEGIN: No Failures - start sleeping ${jobtime}" $LOGFILE
     sleep "${jobtime}" 
@@ -102,7 +102,7 @@ ceph osd set nodeep-scrub
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph1=$!
 # VERIFY it successfully started
-sleep 1s
+sleep "${sleeptime}"
 if ! ps -p $PIDpollceph1 > /dev/null; then
     error_exit "First pollceph.sh FAILED."
 fi
@@ -125,7 +125,7 @@ updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph2=$!
 # VERIFY it successfully started
-sleep 1s
+sleep "${sleeptime}"
 if ! ps -p $PIDpollceph2 > /dev/null; then
     error_exit "Second pollceph.sh FAILED."
 fi
@@ -187,7 +187,7 @@ ceph osd unset noscrub
 ceph osd unset nodeep-scrub
 
 # Call pollceph one final time, expecting HEALTH_OK and immediate return
-sleep 1
+sleep "${sleeptime}"
 ./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
 # update logfile with completion timestamp and end email notifications
