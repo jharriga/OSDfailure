@@ -5,10 +5,13 @@
 #------------------------
 # Runtimes for various phases
 unittime="m"                 # unit for time values (s=sec; m=min; h=hr)
-jobtime="60"
 failuretime="10"
 recoverytime="60"
-pollinterval="1"
+if [ $failuretime >= $recoverytime ]; then
+    echo "failuretime should never exceed recoverytime in vars.shinc"; exit
+fi
+phasetime=$(( failuretime + recoverytime ))
+pollinterval="1"             # pollceph.sh interval to check ceph status
 sleeptime="2"                # CONSTANT always in seconds
 #  Calculate runtime  (in sec)for COSbench workload XML file
 if [ $unittime == "s" ]; then
@@ -21,11 +24,10 @@ else
     echo "unknown unittime value in vars.shinc"; exit
 fi
 # Runtime (in sec) per workstage - added to RUNTESTxml.xml workload file 
-runtime_sec=$(( time_mult * (jobtime + failuretime) + sleeptime ))
+runtime_sec=$(( (time_mult * phasetime) + sleeptime ))
 
 # DEBUG - alternative time values for faster runtimes
-#jobtime="5m"
-#failuretime="5m"
+#failuretime="1m"
 #recoverytime="5m"
 
 #------------------------
