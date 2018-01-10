@@ -73,6 +73,10 @@ key=$(ssh $rgw 'radosgw-admin user info --uid=johndoe | grep secret_key' | tail 
 sed  -i "s/password=.*;/password=$key;/g" "${PREPARExml}"
 sed  -i "s/password=.*;/password=$key;/g" "${RUNTESTxml}"
 
+# Run the COSbench workload to fill the cluster
+echo "starting the I/O workload to prepare the Ceph cluster"
+./cos.sh "${PREPARExml}"
+
 echo "$PROGNAME: Done"	
 
 # DONE
