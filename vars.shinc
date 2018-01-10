@@ -118,15 +118,17 @@ DEPENDENCIES_arr=(
   "ceph"                     # ceph cmdline tool
   "ipmitool"                 # used to shutdown/reset OSDnode
   "systemctl"                # controlling ceph svcs
-)
+  )
 
 # Ceph cluster node IP addresses
 OSDhostname="10.12.70.112"               # 1GbE for c04-h05-6048r
 MONhostname="10.12.70.141"               # 1GbE for c04-h33-6018r
 
 # OSD network interfaces to be taken down
-OSDiface1="ens3f0"
-OSDiface2="ens3f1"
+IFACE_arr=(
+  "ens3f0"
+  "ens3f1"
+  )
 
 # COSbench vars
 cosPATH="/root/0.42"
