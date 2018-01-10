@@ -75,7 +75,7 @@ sed  -i "s/password=.*;/password=$key;/g" "${RUNTESTxml}"
 
 # Run the COSbench workload to fill the cluster
 echo "starting the I/O workload to prepare the Ceph cluster"
-./cos.sh "${PREPARExml}"
+./Utils/cos.sh "../${PREPARExml}"
 
 echo "$PROGNAME: Done"	
 
