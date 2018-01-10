@@ -18,8 +18,7 @@
 #   Delete the testpool to accelerate recovery
 #   Wait for recovery and record timestamp for ('active&clean')
 #
-#   Proposed variable settings:
-#     - jobtime = 60 min
+#   Proposed variable settings: (see vars.shinc)
 #     - failuretime = 10 min
 #     - recoverytime = 60 min
 #     - polltime = 1 min
@@ -62,37 +61,30 @@ updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 # END: Housekeeping
 #--------------------------------------
 
+#>>> PHASE 1: no failures <<<
 # Start the COSbench I/O workload
-#pbench-user-benchmark "./cos.sh ${RUNTESTxml}" &
-sleep 100m &           ## DEBUG
-updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
+pbench-user-benchmark "./cos.sh ${RUNTESTxml}" &
+#sleep 100m &           ## DEBUG
+#updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
 
 PIDpbench=$!
 updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGFILE
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ps -p $PIDpbench > /dev/null; then
-    updatelog "BEGIN: No Failures - start sleeping ${jobtime}" $LOGFILE
-    sleep "${jobtime}" 
+    tmp_str="${phasetime}${unittime}"
+    updatelog "BEGIN: No Failures - start sleeping ${tmp_str}" $LOGFILE
+    sleep "${tmp_str}" 
 else
     error_exit "pbench-user-benchmark cosbench FAILED"
 fi
 updatelog "END: No Failures - completed sleeping" $LOGFILE
 
+#>>> PHASE 2: single osd device failure <<<
 #---------------------------------------
 # BEGIN the OSD device failure sequence
 #   could invoke OSD device failure with ansible
 ##ansible-playbook "${PLAYBOOKosddevfail}"
-
-# set the remote logfile name
-logbase=$(basename $LOGFILE)
-logtmp="/tmp/${logbase}"
-## Drop the OSDdevice using SSH
-ssh "root@${OSDhostname}" "bash -s" < dropOSD.bash "${failuretime}" "${logtmp}"
-# bring the remote logfile back and append to LOGFILE
-scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
-cat "${logtmp}" >> $LOGFILE
-rm -f "${logtmp}"
 
 # Disable scrubbing - per RHCS ADMIN Guide
 ceph osd set noscrub
@@ -107,9 +99,20 @@ if ! ps -p $PIDpollceph1 > /dev/null; then
     error_exit "First pollceph.sh FAILED."
 fi
 
+# set the remote logfile name
+logbase=$(basename $LOGFILE)
+logtmp="/tmp/${logbase}"
+## Drop the OSDdevice using SSH - blocks for failuretime
+ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${failuretime}" "${logtmp}"
+# bring the remote logfile back and append to LOGFILE
+scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
+cat "${logtmp}" >> $LOGFILE
+rm -f "${logtmp}"
+
 # Let things run for 'recoverytime'
-updatelog "BEGIN: OSDdevice - sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
-sleep "${recoverytime}"
+tmp_str="${recoverytime}${unittime}"
+updatelog "BEGIN: OSDdevice - sleeping ${tmp_str} to monitor cluster re-patriation" $LOGFILE
+sleep "${tmp_str}"
 
 # Now kill off the POLLCEPH background process
 kill $PIDpollceph1
@@ -117,6 +120,7 @@ updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 # END - OSD device failure sequence
 #--------------------------------------
 
+#>>> PHASE 3: entire osd node failure <<<
 ######---------------------------------
 # The 'OSD node' failure sequence
 # scrubbing is already disabled
@@ -129,8 +133,6 @@ sleep "${sleeptime}"
 if ! ps -p $PIDpollceph2 > /dev/null; then
     error_exit "Second pollceph.sh FAILED."
 fi
-# invoke OSD node failure with ansible
-##ansible-playbook "${PLAYBOOKosdnodefail}"
 
 # take the ifaces down - defined in vars.shinc
 for iface in ${IFACE_arr[@]}; do
@@ -146,7 +148,8 @@ done
 #updatelog "OSDhostname ${OSDhostname} halted. Power reset in ${failuretime}" $LOGFILE
 
 # Wait for failuretime
-sleep "${failuretime}"
+tmp_str="${failuretime}${unittime}"
+sleep "${tmp_str}"
 
 # Reboot OSDnode
 #ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
@@ -159,8 +162,9 @@ for iface in ${IFACE_arr[@]}; do
 done
 
 # Let things run for 'recoverytime'
-updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
-sleep "${recoverytime}"
+tmp_str="${recoverytime}${unittime}"
+updatelog "OSDnode: sleeping ${tmp_str} to monitor cluster re-patriation" $LOGFILE
+sleep "${tmp_str}"
 
 # Now kill off the background processes: POLLceph and PBENCH-COSbench (I/O workload)
 kill $PIDpollceph2
