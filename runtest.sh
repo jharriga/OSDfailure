@@ -132,10 +132,11 @@ fi
 # invoke OSD node failure with ansible
 ##ansible-playbook "${PLAYBOOKosdnodefail}"
 
-# take the ifaces down  (40Gb NICs are ens3f1 and ens3f0)
-updatelog "IFDOWN: Taking ifaces down on ${OSDhostname}" $LOGFILE
-ssh "root@${OSDhostname}" ifdown "${OSDiface1}"
-ssh "root@${OSDhostname}" ifdown "${OSDiface2}"
+# take the ifaces down - defined in vars.shinc
+for iface in ${IFACE_arr[@]}; do
+    updatelog "IFDOWN: Taking iface ${iface} *down* on ${OSDhostname}" $LOGFILE
+    ssh "root@${OSDhostname}" ifdown "${iface}"
+done
 
 # shutdown the OSDhost and set for delayed reboot
 #updatelog "BEGIN: OSDnode - halting" $LOGFILE
@@ -151,10 +152,11 @@ sleep "${failuretime}"
 #ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
 #updatelog "OSDhostname ${OSDhostname} ipmi power reset. Rebooting..." $LOGFILE
 
-# bring the ifaces up  (40Gb NICs are ens3f1 and ens3f0)
-updatelog "IFUP: Bringing ifaces up on ${OSDhostname}" $LOGFILE
-ssh "root@${OSDhostname}" ifup "${OSDiface1}"
-ssh "root@${OSDhostname}" ifup "${OSDiface2}"
+# bring the ifaces up - defined in vars.shinc
+for iface in ${IFACE_arr[@]}; do
+    updatelog "IFUP: Bringing iface ${iface} *up* on ${OSDhostname}" $LOGFILE
+    ssh "root@${OSDhostname}" ifup "${iface}"
+done
 
 # Let things run for 'recoverytime'
 updatelog "OSDnode: sleeping ${recoverytime} to monitor cluster re-patriation" $LOGFILE
