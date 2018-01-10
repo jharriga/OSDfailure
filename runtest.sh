@@ -72,9 +72,13 @@ updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGF
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ps -p $PIDpbench > /dev/null; then
-    tmp_str="${phasetime}${unittime}"
-    updatelog "BEGIN: No Failures - start sleeping ${tmp_str}" $LOGFILE
-    sleep "${tmp_str}" 
+    # match the timing of the other two phases (failuretime + recoverytime)
+    t_phase1F="${failuretime}${unittime}"            # failure duration
+    updatelog "BEGIN: No Failures - start sleeping ${t_phase1F}" $LOGFILE
+    sleep "${t_phase1F}"
+    t_phase1R="${recoverytime}${unittime}"           # recovery duration
+    updatelog "CONTINUE: No Failures - start sleeping ${t_phase1R}" $LOGFILE
+    sleep "${t_phase1R}"
 else
     error_exit "pbench-user-benchmark cosbench FAILED"
 fi
@@ -103,16 +107,17 @@ fi
 logbase=$(basename $LOGFILE)
 logtmp="/tmp/${logbase}"
 ## Drop the OSDdevice using SSH - blocks for failuretime
-ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${failuretime}" "${logtmp}"
+t_phase2F="{failuretime}{unittime}"
+ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${t_phase2F}" "${logtmp}"
 # bring the remote logfile back and append to LOGFILE
 scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
 cat "${logtmp}" >> $LOGFILE
 rm -f "${logtmp}"
 
 # Let things run for 'recoverytime'
-tmp_str="${recoverytime}${unittime}"
-updatelog "BEGIN: OSDdevice - sleeping ${tmp_str} to monitor cluster re-patriation" $LOGFILE
-sleep "${tmp_str}"
+t_phase2R="${recoverytime}${unittime}"
+updatelog "BEGIN: OSDdevice - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
+sleep "${t_phase2R}"
 
 # Now kill off the POLLCEPH background process
 kill $PIDpollceph1
@@ -148,8 +153,8 @@ done
 #updatelog "OSDhostname ${OSDhostname} halted. Power reset in ${failuretime}" $LOGFILE
 
 # Wait for failuretime
-tmp_str="${failuretime}${unittime}"
-sleep "${tmp_str}"
+t_phase3F="${failuretime}${unittime}"
+sleep "${t_phase3F}"
 
 # Reboot OSDnode
 #ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
@@ -162,9 +167,9 @@ for iface in ${IFACE_arr[@]}; do
 done
 
 # Let things run for 'recoverytime'
-tmp_str="${recoverytime}${unittime}"
-updatelog "OSDnode: sleeping ${tmp_str} to monitor cluster re-patriation" $LOGFILE
-sleep "${tmp_str}"
+t_phase3R="${recoverytime}${unittime}"
+updatelog "OSDnode: sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
+sleep "${t_phase3R}"
 
 # Now kill off the background processes: POLLceph and PBENCH-COSbench (I/O workload)
 kill $PIDpollceph2
