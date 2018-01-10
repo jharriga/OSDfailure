@@ -1,6 +1,14 @@
 #!/bin/bash
 # PREPCLUSTER.sh
 
+myPath="${BASH_SOURCE%/*}"
+if [[ ! -d "$myPath" ]]; then
+    myPath="$PWD" 
+fi
+
+# Variables
+source "$myPath/vars.shinc"
+
 #------------------------
 # BEGIN FUNCTIONS
 function delete_pools {
