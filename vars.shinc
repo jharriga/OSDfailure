@@ -122,6 +122,7 @@ DEPENDENCIES_arr=(
 # Ceph cluster node IP addresses
 OSDhostname="10.12.70.112"               # 1GbE for c04-h05-6048r
 MONhostname="10.12.70.141"               # 1GbE for c04-h33-6018r
+RGWhostname="rgw"
 
 # OSD network interfaces to be taken down
 IFACE_arr=(
