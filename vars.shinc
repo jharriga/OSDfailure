@@ -7,9 +7,6 @@
 unittime="m"                 # unit for time values (s=sec; m=min; h=hr)
 failuretime="10"
 recoverytime="60"
-if [ $failuretime >= $recoverytime ]; then
-    echo "failuretime should never exceed recoverytime in vars.shinc"; exit
-fi
 phasetime=$(( failuretime + recoverytime ))
 pollinterval="1"             # pollceph.sh interval to check ceph status
 sleeptime="2"                # CONSTANT always in seconds
