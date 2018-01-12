@@ -30,7 +30,7 @@ runtime_sec=$(( (time_mult * phasetime) + sleeptime ))
 #------------------------
 # writeXML.sh variables
 PREPAREtemplate="XMLtemplates/TMPL_prepCluster.xml"
-PREPARExml="prepCluster.xml"
+PREPARExml="prepWorkload.xml"
 # fillCluster: pre-existing keys in the template file
 declare -a PCkeys_arr=("PREPAREstorage_type"
                        "PREPAREtimeout"
