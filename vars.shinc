@@ -115,7 +115,7 @@ fi
 DEPENDENCIES_arr=(
   "pbench-user-benchmark"    # monitoring framework
   "ceph"                     # ceph cmdline tool
-  "ipmitool"                 # used to shutdown/reset OSDnode
+  "ansible"                  # used to start/stop RGW svcs
   "systemctl"                # controlling ceph svcs
   )
 
