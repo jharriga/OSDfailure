@@ -54,7 +54,7 @@ function create_pools {
 #------------------------
 
 echo "$PROGNAME: Running with these values:"
-echo "r=$REPLICATION k=$k m=$m pgdata=$pg_data pgindex=$pg_index \
+echo "RGWhostname=$RGWhostname r=$REPLICATION k=$k m=$m pgdata=$pg_data pgindex=$pg_index \
       pg=$pg f=$fast_read"
 
 echo "Stopping RGWs"
@@ -72,12 +72,12 @@ echo "Starting RGWs"
 ansible -m shell -a 'systemctl start ceph-radosgw@rgw.`hostname -s`.service' all
 
 echo "Creating User - which generates a new Password"
-ssh $rgw 'radosgw-admin user create --uid=johndoe --display-name="John Doe" --email=john@example.com' &&
-ssh $rgw 'radosgw-admin subuser create --uid=johndoe --subuser=johndoe:swift --access=full' 
+ssh $RGWhostname 'radosgw-admin user create --uid=johndoe --display-name="John Doe" --email=john@example.com' &&
+ssh $RGWhostname 'radosgw-admin subuser create --uid=johndoe --subuser=johndoe:swift --access=full' 
 
 # edit the Password into the XML workload files
 echo "inserting new password into XML files $PREPARExml, $RUNTESTxml"
-key=$(ssh $rgw 'radosgw-admin user info --uid=johndoe | grep secret_key' | tail -1 | awk '{print $2}' | sed 's/"//g')
+key=$(ssh $RGWhostname 'radosgw-admin user info --uid=johndoe | grep secret_key' | tail -1 | awk '{print $2}' | sed 's/"//g')
 sed  -i "s/password=.*;/password=$key;/g" "${PREPARExml}"
 sed  -i "s/password=.*;/password=$key;/g" "${RUNTESTxml}"
 
