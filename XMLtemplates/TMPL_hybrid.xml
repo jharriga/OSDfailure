@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<workload name="write" description="RGW-Cache Benchmarking">
+<workload name="hybrid" description="RGW failure testing">
 
 
 <!-- Initialization -->
-  <storage type="swift" config="timeout=600000" retry="3"/>
-  <auth type="swauth" config="username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http://rgw:8080/auth/1.0" />
+  <storage type="RUNTESTstorage_type" config="timeout=RUNTESTtimeout" retry="RUNTESTretry"/>
+  <auth type="RUNTESTauth_type" config="RUNTESTconfig" />
 
   <workflow>
 
@@ -13,56 +13,52 @@
     </workstage>
 
 <!-- 
-1) No failures 1hr
-Delay 2 min
-2) Single OSD_device failure 1hr
-Delay 2 min
-3) Drop two interfaces 1hr
-Delay 2 min
-4)
+1) No failures
+2) Single OSD_device failure
+3) Simulate OSD node failure by dropping network interfaces
 
 -->
 
-<!-- client1 read 64M 64K 1G files	 -->
-<!--50% PUT, 30% GET, 10% bucket listing, 10% deletes
+<!-- Use object sizes as defined in vars.shinc	 -->
+<!-- Operation mix is: 50% PUT, 30% GET, 10% bucket listing, 10% deletes
      -->
 
  <workstage name="no_failure">
-         <work name="phase1" workers="96" runtime="3605" >
-         <operation name="64KB_write" type="write" ratio="8" config="containers=u(101,150);objects=u(1,4020);sizes=c(64)KB"  />
-         <operation name="64MB_write" type="write" ratio="8" config="containers=u(151,200);objects=u(1,4020);sizes=c(64)MB"  />
-         <operation name="1GB_write" type="write" ratio="4" config="containers=u(201,250);objects=u(1,4020);sizes=c(1)GB"  />
+         <work name="phase1" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
+         <operation name="size1_write" type="write" ratio="8" config="containers=u(101,150);objects=u(1,4020);sizes=RUNTESTsizes1"  />
+         <operation name="size2_write" type="write" ratio="8" config="containers=u(151,200);objects=u(1,4020);sizes=RUNTESTsizes2"  />
+         <operation name="size3_write" type="write" ratio="4" config="containers=u(201,250);objects=u(1,4020);sizes=RUNTESTsizes3"  />
          <operation type="list"  ratio="10" config="containers=c(1,100);objects=u(1000,4020)" />
 	<operation type="delete" ratio="10" config="containers=c(1,100);objects=u(1,100)" />
-	<operation name="64KB_read" type="read" ratio="24" config="containers=c(1,40);objects=u(1000,4020)" />
-	<operation name="64MB_read" type="read" ratio="24" config="containers=c(41,80);objects=u(1000,4020)" />
-	<operation name="1GB_read" type="read" ratio="12" config="containers=c(81,100);objects=u(1000,4020)" />
+	<operation name="size1_read" type="read" ratio="24" config="containers=c(1,40);objects=u(1000,4020)" />
+	<operation name="size2_read" type="read" ratio="24" config="containers=c(41,80);objects=u(1000,4020)" />
+	<operation name="size3_read" type="read" ratio="12" config="containers=c(81,100);objects=u(1000,4020)" />
         </work>
     </workstage>
 
  <workstage name="osd_failure">
-         <work name="phase2" workers="96" runtime="4201" >
-         <operation name="64KB_write" type="write" ratio="8" config="containers=u(101,150);objects=u(4021,6020);sizes=c(64)KB"  />
-         <operation name="64MB_write" type="write" ratio="8" config="containers=u(151,200);objects=u(4021,6020);sizes=c(64)MB"  />
-         <operation name="1GB_write" type="write" ratio="4" config="containers=u(201,250);objects=u(4021,6020);sizes=c(1)GB"  />
+         <work name="phase2" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
+         <operation name="size1_write" type="write" ratio="8" config="containers=u(101,150);objects=u(4021,6020);sizes=RUNTESTsizes1"  />
+         <operation name="size2_write" type="write" ratio="8" config="containers=u(151,200);objects=u(4021,6020);sizes=RUNTESTsizes2"  />
+         <operation name="size3_write" type="write" ratio="4" config="containers=u(201,250);objects=u(4021,6020);sizes=RUNTESTsizes3"  />
          <operation type="list" ratio="10" config="containers=c(1,100);objects=u(1000,4020)" />
         <operation type="delete" ratio="10" config="containers=c(1,100);objects=u(101,250)" />
-        <operation name="64KB_read" type="read" ratio="24" config="containers=c(1,40);objects=u(1000,4020)" />
-        <operation name="64MB_read" type="read" ratio="24" config="containers=c(41,80);objects=u(1000,4020)" />
-        <operation name="1GB_read" type="read" ratio="12" config="containers=c(81,100);objects=u(1000,4020)" />
+        <operation name="size1_read" type="read" ratio="24" config="containers=c(1,40);objects=u(1000,4020)" />
+        <operation name="size2_read" type="read" ratio="24" config="containers=c(41,80);objects=u(1000,4020)" />
+        <operation name="size3_read" type="read" ratio="12" config="containers=c(81,100);objects=u(1000,4020)" />
         </work>
     </workstage>
 
  <workstage name="node_failure">
-         <work name="phase3" workers="96" runtime="4201" >
-         <operation name="64KB_write" type="write" ratio="8" config="containers=u(101,150);objects=u(6021,8020);sizes=c(64)KB"  />
-         <operation name="64MB_write" type="write" ratio="8" config="containers=u(151,200);objects=u(6021,8020);sizes=c(64)MB"  />
-         <operation name="1GB_write" type="write" ratio="4" config="containers=u(201,250);objects=u(6021,8020);sizes=c(1)GB"  />
+         <work name="phase3" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
+         <operation name="size1_write" type="write" ratio="8" config="containers=u(101,150);objects=u(6021,8020);sizes=RUNTESTsizes1"  />
+         <operation name="size2_write" type="write" ratio="8" config="containers=u(151,200);objects=u(6021,8020);sizes=RUNTESTsizes2"  />
+         <operation name="size3_write" type="write" ratio="4" config="containers=u(201,250);objects=u(6021,8020);sizes=RUNTESTsizes3"  />
          <operation type="list" ratio="10" config="containers=c(1,100);objects=u(1000,4020)" />
         <operation type="delete" ratio="10" config="containers=c(1,100);objects=u(251,400)" />
-        <operation name="64KB_read" type="read" ratio="24" config="containers=c(1,40);objects=u(1000,4020)" />
-        <operation name="64MB_read" type="read" ratio="24" config="containers=c(41,80);objects=u(1000,4020)" />
-        <operation name="1GB_read" type="read" ratio="12" config="containers=c(81,100);objects=u(1000,4020)" />
+        <operation name="size1_read" type="read" ratio="24" config="containers=c(1,40);objects=u(1000,4020)" />
+        <operation name="size2_read" type="read" ratio="24" config="containers=c(41,80);objects=u(1000,4020)" />
+        <operation name="size3_read" type="read" ratio="12" config="containers=c(81,100);objects=u(1000,4020)" />
         </work>
     </workstage>
 
