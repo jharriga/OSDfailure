@@ -21,9 +21,9 @@
 
  <workstage name="no_failure">
          <work name="writeDelete" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
-         <operation name="64KB_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(4020,6040);sizes=RUNTESTsizes1"  />
-         <operation name="64MB_write" type="write" ratio="20" config="containers=u(41,80);objects=u(4020,6040);sizes=RUNTESTsizes2"  />
-         <operation name="1GB_write" type="write" ratio="20" config="containers=u(81,100);objects=u(4020,6040);sizes=RUNTESTsizes3"  />
+         <operation name="size1_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(4020,6040);sizes=RUNTESTsizes1"  />
+         <operation name="size2_write" type="write" ratio="20" config="containers=u(41,80);objects=u(4020,6040);sizes=RUNTESTsizes2"  />
+         <operation name="size3_write" type="write" ratio="20" config="containers=u(81,100);objects=u(4020,6040);sizes=RUNTESTsizes3"  />
 	<operation type="delete" ratio="10" config="containers=c(1,40);objects=u(1,4020)" />
 	<operation type="delete" ratio="15" config="containers=c(41,80);objects=u(1,4020)" />
 	<operation type="delete" ratio="15" config="containers=c(81,100);objects=u(1,4020)" />
@@ -33,9 +33,9 @@
 
  <workstage name="osd_failure">
          <work name="writeDelete" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
-         <operation name="64KB_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(6040,8040);sizes=RUNTESTsizes1"  />
-         <operation name="64MB_write" type="write" ratio="20" config="containers=u(41,80);objects=u(6040,8040);sizes=RUNTESTsizes2"  />
-         <operation name="1GB_write" type="write" ratio="20" config="containers=u(81,100);objects=u(6040,8040);sizes=RUNTESTsizes3"  />
+         <operation name="size1_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(6040,8040);sizes=RUNTESTsizes1"  />
+         <operation name="size2_write" type="write" ratio="20" config="containers=u(41,80);objects=u(6040,8040);sizes=RUNTESTsizes2"  />
+         <operation name="size3_write" type="write" ratio="20" config="containers=u(81,100);objects=u(6040,8040);sizes=RUNTESTsizes3"  />
         <operation type="delete" ratio="10" config="containers=c(1,40);objects=u(1,6040)" />
         <operation type="delete" ratio="15" config="containers=c(41,80);objects=u(1,6040)" />
         <operation type="delete" ratio="15" config="containers=c(81,100);objects=u(1,6040)" />
@@ -45,9 +45,9 @@
 
  <workstage name="node_failure">
          <work name="writeDelete" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
-         <operation name="64KB_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(8040,10040);sizes=RUNTESTsizes1"  />
-         <operation name="64MB_write" type="write" ratio="20" config="containers=u(41,80);objects=u(8040,10040);sizes=RUNTESTsizes2"  />
-         <operation name="1GB_write" type="write" ratio="20" config="containers=u(81,100);objects=u(8040,10040);sizes=RUNTESTsizes3"  />
+         <operation name="size1_write" type="write" ratio="20"  config="containers=u(1,40);objects=u(8040,10040);sizes=RUNTESTsizes1"  />
+         <operation name="size2_write" type="write" ratio="20" config="containers=u(41,80);objects=u(8040,10040);sizes=RUNTESTsizes2"  />
+         <operation name="size3_write" type="write" ratio="20" config="containers=u(81,100);objects=u(8040,10040);sizes=RUNTESTsizes3"  />
         <operation type="delete" ratio="10" config="containers=c(1,40);objects=u(1,8040)" />
         <operation type="delete" ratio="15" config="containers=c(41,80);objects=u(1,8040)" />
         <operation type="delete" ratio="15" config="containers=c(81,100);objects=u(1,8040)" />
