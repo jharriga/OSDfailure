@@ -11,7 +11,7 @@
 <!-- 
 1) No failures 
 2) Single OSD_device failure 
-3) Drop two interfaces
+3) Simulate loss of OSD node by dropping a network interface
 
 -->
 
