@@ -55,6 +55,7 @@ declare -a PCvalues_arr=("swift"           # storage type
                          )
 
 # RUNTEST settings
+#RUNTESTtemplate="XMLtemplates/TMPL_hybrid.xml"
 RUNTESTtemplate="XMLtemplates/TMPL_deleteWrite.xml"
 RUNTESTxml="ioWorkload.xml"
 # runtest: pre-existing keys in the template file
