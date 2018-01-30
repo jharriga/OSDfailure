@@ -75,11 +75,14 @@ echo "Creating User - which generates a new Password"
 ssh $RGWhostname 'radosgw-admin user create --uid=johndoe --display-name="John Doe" --email=john@example.com' &&
 ssh $RGWhostname 'radosgw-admin subuser create --uid=johndoe --subuser=johndoe:swift --access=full' 
 
-# edit the Password into the XML workload files
+# insert the Password into the XML workload files
 echo "inserting new password into XML files $PREPARExml, $RUNTESTxml"
 key=$(ssh $RGWhostname 'radosgw-admin user info --uid=johndoe | grep secret_key' | tail -1 | awk '{print $2}' | sed 's/"//g')
 sed  -i "s/password=.*;/password=$key;/g" "${PREPARExml}"
 sed  -i "s/password=.*;/password=$key;/g" "${RUNTESTxml}"
+
+# pause
+sleep 5s
 
 # Run the COSbench workload to fill the cluster
 echo "starting the I/O workload to prepare the Ceph cluster"
