@@ -58,7 +58,7 @@ echo "RGWhostname=$RGWhostname r=$REPLICATION k=$k m=$m pgdata=$pg_data pgindex=
       pg=$pg f=$fast_read"
 
 echo "Stopping RGWs"
-ansible -m shell -a 'systemctl stop ceph-radosgw@rgw.`hostname -s`.service' all
+ansible -m shell -a 'systemctl stop ceph-radosgw@rgw.`hostname -s`.service' rgws
 
 echo "Removing existing/old pools"
 delete_pools
@@ -69,7 +69,7 @@ create_pools $REPLICATION
 echo "sleeping for a while..."; sleep 400
 
 echo "Starting RGWs"
-ansible -m shell -a 'systemctl start ceph-radosgw@rgw.`hostname -s`.service' all
+ansible -m shell -a 'systemctl start ceph-radosgw@rgw.`hostname -s`.service' rgws
 
 echo "Creating User - which generates a new Password"
 ssh $RGWhostname 'radosgw-admin user create --uid=johndoe --display-name="John Doe" --email=john@example.com' &&
