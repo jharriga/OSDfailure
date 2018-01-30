@@ -86,7 +86,7 @@ sleep 5s
 
 # Run the COSbench workload to fill the cluster
 echo "starting the I/O workload to prepare the Ceph cluster"
-./Utils/cos.sh "../${PREPARExml}"
+./Utils/cos.sh "${myPath}/${PREPARExml}"
 
 echo "$PROGNAME: Done"	
 
