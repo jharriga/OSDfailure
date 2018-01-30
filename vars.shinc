@@ -27,6 +27,9 @@ runtime_sec=$(( (time_mult * phasetime) + sleeptime ))
 #failuretime="1m"
 #recoverytime="5m"
 
+# auth_url connection point - used below in PCvalues_arr and RTvalues_arr
+rgwURL="rgw:8080"
+
 #------------------------
 # writeXML.sh variables
 PREPAREtemplate="XMLtemplates/TMPL_prepCluster.xml"
@@ -41,17 +44,19 @@ declare -a PCkeys_arr=("PREPAREstorage_type"
                        "PREPAREsizes1"
                        "PREPAREsizes2"
                        "PREPAREsizes3"
+                       "PREPAREnumobjs"
                        )
 declare -a PCvalues_arr=("swift"           # storage type
                          "60000"           # timeout
                          "3"               # retries
                          "swauth"          # auth_type
                          # a bit messy since SED requires "/" be escaped
-                         "username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http:\/\/rgw:8080\/auth\/1.0"
-                         "24"
-                         "c(64)KB"
-                         "c(64)MB"
-                         "c(1)GB"
+                         "username=johndoe:swift;password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
+                         "24"              # number of workers
+                         "c(64)KB"         # size1
+                         "c(64)MB"         # size2
+                         "c(1)GB"          # size3
+                         "4020"            # number of objects
                          )
 
 # RUNTEST settings
@@ -69,26 +74,30 @@ declare -a RTkeys_arr=("RUNTESTstorage_type"
                        "RUNTESTsizes1"
                        "RUNTESTsizes2"
                        "RUNTESTsizes3"
+                       "RUNTESTnumobjs"
                        )
 declare -a RTvalues_arr=("swift"          # storage_type
                          "60000"          # timeout
                          "3"              # retries
                          "swauth"         # auth_type
                          # a bit messy since SED requires "/" be escaped
-                         "username=johndoe:swift;password=UxzTSG2V9f5eOxFDdz5UmrXyYl1EJkh2sBv8AVJQ;auth_url=http:\/\/rgw:8080\/auth\/1.0"
+                         "username=johndoe:swift;password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
                          "96"              # workers
                          "${runtime_sec}"  # runtime in seconds
                          "c(64)KB"         # sizes1
                          "c(64)MB"         # sizes2
                          "c(1)GB"          # sizes3
+                         "4020"            # number of objects
                          )
  
 #------------------------
 # PREPCLUSTER.sh variables
+longPAUSE="90s"
 pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default.rgw.control" \
           "default.rgw.gc" "default.rgw.buckets.data" "default.rgw.buckets.index" "default.rgw.buckets.extra" \
           "default.rgw.log" "default.rgw.meta" "default.rgw.intent-log" "default.rgw.usage" "default.rgw.users" \
           "default.rgw.users.email" "default.rgw.users.swift" "default.rgw.users.uid")
+numREPLICAS=3                # how many replicas
 preparePTYPE=rep             # Must be rep OR ec
 if [ $preparePTYPE == "rep" ]; then
     REPLICATION="rep"
@@ -121,8 +130,8 @@ DEPENDENCIES_arr=(
   )
 
 # Ceph cluster node IP addresses
-OSDhostname="10.12.70.112"               # 1GbE for c04-h05-6048r
-MONhostname="10.12.70.141"               # 1GbE for c04-h33-6018r
+OSDhostname="10.12.70.112"
+MONhostname="10.12.70.141"
 RGWhostname="rgw"
 
 # OSD network interfaces to be taken down
@@ -132,7 +141,7 @@ IFACE_arr=(
   )
 
 # COSbench vars
-cosPATH="/root/0.42"
+cosPATH="/root/0.4.2.c4"
 
 # Timestamp logfile
 ts="$(date +%Y%m%d-%H%M%S)"
