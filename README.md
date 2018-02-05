@@ -3,6 +3,9 @@ Scripts for automation of I/O workload and Ceph failure injection.
 Uses COSbench to apply I/O workload; pbench for monitoring and SSH
 scripts (dropOSD.bash) to inject failures.
 
+For a writeup of how the ceph cluster was installed see:
+ https://github.com/ekaynar/Benchmarks/blob/master/ceph-ansible/README.md
+
 Could be adapted to use ansible playbooks to inject failures
 
 FILE INVENTORY:
