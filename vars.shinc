@@ -28,10 +28,11 @@ runtime_sec=$(( (time_mult * phasetime) + sleeptime ))
 #recoverytime="5m"
 
 # KEY RUNTIME VALUES - used below in PCvalues_arr and RTvalues_arr
-# auth_url connection point
-rgwURL="rgw:8080"
-prepareWORKERS=24
-runtestWORKERS=96
+#
+rgwUSER="johndoe:swift"            # username
+rgwURL="rgw:8080"                  # auth_url connection point
+prepareWORKERS=24                  # number of workers to use for preparing the Cluster
+runtestWORKERS=96                  # number of workers for running the I/O Workload
 # Object sizes
 objSIZES=“h(4|4|34,64|64|33,65536|65536|33)KB”
 # Number of Containers and Objects
@@ -75,7 +76,7 @@ declare -a PCvalues_arr=("swift"               # storage type
                          "3"                   # retries
                          "swauth"              # auth_type
                          # config: a bit messy since SED requires "/" be escaped
-                         "username=johndoe:swift;password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
+                         "username=${rgwUSER};password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
                          "${prepareWORKERS}"   # number of workers
                          "${objSIZES}"         # Object sizes
                          "${numCONT}"          # number of Containers
@@ -111,7 +112,7 @@ declare -a RTvalues_arr=("swift"               # storage_type
                          "3"                   # retries
                          "swauth"              # auth_type
                          # config: a bit messy since SED requires "/" be escaped
-                         "username=johndoe:swift;password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
+                         "username=${rgwUSER};password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
                          "${runtestWORKERS}"   # workers
                          "${runtime_sec}"      # runtime in seconds
                          "${objSIZES}"         # Object sizes
