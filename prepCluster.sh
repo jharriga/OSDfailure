@@ -37,11 +37,16 @@ function create_pools {
   for pl in ${pool_list[@]}; do
       if [ $pl == "default.rgw.buckets.data" ]; then
           ceph osd pool create $pl $pg_data $cmd_tail
+          if [ "$1" == "rep" ]; then
+              ceph osd pool set $pl size "${numREPLICAS}"
+          fi
       elif [ $pl == "default.rgw.buckets.index" ]; then
           ceph osd pool create $pl $pg_index replicated
+          ceph osd pool set $pl size "${numREPLICAS}"
       else
           ceph osd pool create $pl $pg replicated
-    fi
+          ceph osd pool set $pl size "${numREPLICAS}"
+      fi
   done
 
   # enable RGW on the pools
@@ -66,22 +71,22 @@ delete_pools
 echo "Creating new pools"
 create_pools $REPLICATION
 
-echo "sleeping for a while..."; sleep 400
+echo "sleeping for $longPAUSE seconds..."; sleep "${longPAUSE}"
 
 echo "Starting RGWs"
 ansible -m shell -a 'systemctl start ceph-radosgw@rgw.`hostname -s`.service' rgws
 
 echo "Creating User - which generates a new Password"
 ssh $RGWhostname 'radosgw-admin user create --uid=johndoe --display-name="John Doe" --email=john@example.com' &&
-ssh $RGWhostname 'radosgw-admin subuser create --uid=johndoe --subuser=johndoe:swift --access=full' 
+ssh $RGWhostname 'radosgw-admin subuser create --uid=johndoe --subuser=${rgwUSER} --access=full' 
 
-# insert the Password into the XML workload files
+# Edit the Password into the XML workload files
 echo "inserting new password into XML files $PREPARExml, $RUNTESTxml"
 key=$(ssh $RGWhostname 'radosgw-admin user info --uid=johndoe | grep secret_key' | tail -1 | awk '{print $2}' | sed 's/"//g')
 sed  -i "s/password=.*;/password=$key;/g" "${PREPARExml}"
 sed  -i "s/password=.*;/password=$key;/g" "${RUNTESTxml}"
 
-# pause
+# pause a short bit
 sleep 5s
 
 # Run the COSbench workload to fill the cluster
