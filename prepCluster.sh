@@ -78,7 +78,7 @@ ansible -m shell -a 'systemctl start ceph-radosgw@rgw.`hostname -s`.service' rgw
 
 echo "Creating User - which generates a new Password"
 ssh $RGWhostname 'radosgw-admin user create --uid=johndoe --display-name="John Doe" --email=john@example.com' &&
-ssh $RGWhostname 'radosgw-admin subuser create --uid=johndoe --subuser="${rgwUSER}" --access=full' 
+ssh $RGWhostname 'radosgw-admin subuser create --uid=johndoe --subuser=johndoe:swift --access=full' 
 
 # Edit the Password into the XML workload files
 echo "inserting new password into XML files $PREPARExml, $RUNTESTxml"
