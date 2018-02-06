@@ -1,33 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <workload name="prepCluster" description="RGW failure testing">
 
-
 <!-- Initialization -->
-  <storage type="swift" config="PREPAREtimeout" retry="PREPAREretry"/>
-  <auth type="swauth" config="PREPAREconfig" />
+  <storage type="PREPAREstorage_type" config="PREPAREtimeout" retry="PREPAREretry"/>
+  <auth type="PREPAREauth_type" config="PREPAREconfig" />
 
   <workflow>
 
 <!-- Initialization -->
-   <workstage name="init_containers">
-      <work type="init" workers="1" config="containers=r(1,120)"/>
-    </workstage>
-
-
-<!-- client1 prepare using PREPAREsizes obj sizes from vars.shinc -->
-
- <workstage name="preparing_cluster">
-         <work type="prepare" workers="PREPAREworkers" config="containers=r(1,40);objects=r(1,PREPAREnumobjs);sizes=PREPAREsizes1" >
-<auth type="swauth" config="PREPAREconfig" />
-        </work>
-         <work type="prepare" workers="PREPAREworkers" config="containers=r(41,80);objects=r(1,PREPAREnumobjs);sizes=PREPAREsizes2" >
-<auth type="swauth" config="PREPAREconfig" />
-        </work>
-         <work type="prepare" workers="PREPAREworkers" config="containers=r(81,120);objects=r(1,PREPAREnumobjs);sizes=PREPAREsizes3" >
-<auth type="swauth" config="PREPAREconfig" />
+    <workstage name="init_containers">
+        <work type="init" workers="1" config="containers=r(1,PREPAREinitCont)"/>
         </work>
     </workstage>
 
+<!-- Prepare using container counts, object counts and object sizes from vars.shinc -->
+    <workstage name="preparing_cluster">
+        <work type="prepare" workers="PREPAREworkers" config="containers=r(1,PREPAREnumCont);objects=r(1,PREPAREnumObjs);sizes=PREPAREsizes" >
+        <auth type="swauth" config="PREPAREconfig" />
+        </work>
+    </workstage>
 
   </workflow>
 
