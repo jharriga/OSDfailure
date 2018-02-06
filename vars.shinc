@@ -34,7 +34,7 @@ rgwURL="rgw:8080"                  # auth_url connection point
 prepareWORKERS=24                  # number of workers to use for preparing the Cluster
 runtestWORKERS=96                  # number of workers for running the I/O Workload
 # Object sizes
-objSIZES=“h(4|4|34,64|64|33,65536|65536|33)KB”
+objSIZES="h(4|4|34,64|64|33,65536|65536|33)KB"
 # Number of Containers and Objects
 numCONT=100
 numOBJ=3273
@@ -51,7 +51,7 @@ if [ $totalRatio -ne 100 ]; then
 fi
 # Conf portions for the Read and List operation statements
 #   - start at 4 to reserve the first 3 containers for Write and Delete ops
-rdCONF=”containers=u(4,${numCONT});objects=u(1,${numOBJ})”
+rdCONF="containers=u(4,${numCONT});objects=u(1,${numOBJ})"
 listCONF="${rdCONF}"
 # Object ranges for the Write and Delete operation statements
 wrOBJ="s(${numOBJincr},${numOBJmax})"
