@@ -40,6 +40,7 @@ while grep HEALTH_WARN /tmp/ceph.status; do
       awk '{print $1}'`
     # Test that all PGs are clean - if so exit the while loop
     if [ "$cleanPG_cnt" -eq "$totPG_cnt" ]; then
+        updatelog "All PGs reported clean; leaving while loop"
         break;
     fi
     uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status | \
