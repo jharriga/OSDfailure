@@ -108,7 +108,7 @@ fi
 logbase=$(basename $LOGFILE)
 logtmp="/tmp/${logbase}"
 ## Drop the OSDdevice using SSH - blocks for failuretime
-t_phase2F="{failuretime}{unittime}"
+t_phase2F="${failuretime}${unittime}"
 ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${t_phase2F}" "${logtmp}"
 # bring the remote logfile back and append to LOGFILE
 scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
