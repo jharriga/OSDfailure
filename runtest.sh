@@ -10,9 +10,9 @@
 #     - poll and record ceph status every 'polltime' minutes
 #   Add the OSD back into cluster and wait for 'recoverytime'
 #     - poll and record ceph status every 'polltime' minutes
-#   Stop OSD node and leave it down for 'failuretime' minutes
+#   Stop OSD node NIC and leave it down for 'failuretime' minutes
 #     - poll and record ceph status every 'polltime' minutes
-#   Add the OSD node back into cluster and wait for 'recoverytime'
+#   Add the OSD node NIC back into cluster and wait for 'recoverytime'
 #     - poll and record ceph status every 'polltime' minutes
 #   Stop COSbench workload
 #   Delete the testpool to accelerate recovery
@@ -63,7 +63,7 @@ updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 
 #>>> PHASE 1: no failures <<<
 # Start the COSbench I/O workload
-pbench-user-benchmark "./cos.sh ${RUNTESTxml}" &
+pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml}" &
 #sleep 100m &           ## DEBUG
 #updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
 
@@ -95,7 +95,7 @@ ceph osd set noscrub
 ceph osd set nodeep-scrub
 
 # Poll ceph status (in a bkrgd process) 
-./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
+Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph1=$!
 # VERIFY it successfully started
 sleep "${sleeptime}"
@@ -131,7 +131,7 @@ updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 # scrubbing is already disabled
 #
 # Poll ceph status (in a bkrgd process) 
-./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
+Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph2=$!
 # VERIFY it successfully started
 sleep "${sleeptime}"
@@ -188,7 +188,7 @@ updatelog "END: Pbench dir moved to /var/www/html/pub/run.$ts" $LOGFILE
 updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LOGFILE
 
 # Poll ceph status (in a blocking foregrd process) 
-./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
+Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
 # Cluster is recovered. cleanPGs == totalPGs.
 # Re-enable scrubbing
@@ -197,7 +197,7 @@ ceph osd unset nodeep-scrub
 
 # Call pollceph one final time, expecting HEALTH_OK and immediate return
 sleep "${sleeptime}"
-./pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
+Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
 # update logfile with completion timestamp and end email notifications
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
