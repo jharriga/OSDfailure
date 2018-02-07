@@ -100,7 +100,8 @@ PIDpollceph1=$!
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ! ps -p $PIDpollceph1 > /dev/null; then
-    error_exit "First pollceph.sh FAILED."
+    kill $PIDpbench
+    error_exit "First pollceph.sh FAILED. Killed pbench: $PIDpbench"
 fi
 
 # set the remote logfile name
@@ -136,7 +137,8 @@ PIDpollceph2=$!
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ! ps -p $PIDpollceph2 > /dev/null; then
-    error_exit "Second pollceph.sh FAILED."
+    kill $PIDpbench
+    error_exit "Second pollceph.sh FAILED. Killed pbench: $PIDpbench"
 fi
 
 # take the ifaces down - defined in vars.shinc
