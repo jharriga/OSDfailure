@@ -9,7 +9,7 @@ unittime="m"                 # unit for time values (s=sec; m=min; h=hr)
 failuretime="10"
 recoverytime="60"
 phasetime=$(( failuretime + recoverytime ))
-pollinterval="1"             # pollceph.sh interval to check ceph status
+pollinterval="1m"            # pollceph.sh interval to check ceph status
 sleeptime="2"                # CONSTANT always in seconds
 #  Calculate runtime  (in sec)for COSbench workload XML file
 if [ $unittime == "s" ]; then
