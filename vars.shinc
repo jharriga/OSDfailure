@@ -4,6 +4,7 @@
 
 #------------------------
 # Runtimes for various phases
+# WARNING: if you change these you need to re-run 'writeXML.sh'
 unittime="m"                 # unit for time values (s=sec; m=min; h=hr)
 failuretime="10"
 recoverytime="60"
