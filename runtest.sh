@@ -5,6 +5,7 @@
 #   time periods
 #
 #   Ensure the testpool is available and 50% full
+#   Disable ceph scrubbing 
 #   Start COSbench workload and sleep for 'jobtime' minutes
 #   Stop OSD device and leave it down for 'failuretime' minutes
 #     - poll and record ceph status every 'polltime' minutes
@@ -17,6 +18,7 @@
 #   Stop COSbench workload
 #   Delete the testpool to accelerate recovery
 #   Wait for recovery and record timestamp for ('active&clean')
+#   Enable Ceph scrubbing
 #
 #   Proposed variable settings: (see vars.shinc)
 #     - failuretime = 10 min
@@ -61,6 +63,10 @@ updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
 # END: Housekeeping
 #--------------------------------------
 
+# Disable scrubbing - for all three test phases
+ceph osd set noscrub
+ceph osd set nodeep-scrub
+
 #>>> PHASE 1: no failures <<<
 # Start the COSbench I/O workload
 pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml}" &
@@ -87,12 +93,6 @@ updatelog "END: No Failures - completed sleeping" $LOGFILE
 #>>> PHASE 2: single osd device failure <<<
 #---------------------------------------
 # BEGIN the OSD device failure sequence
-#   could invoke OSD device failure with ansible
-##ansible-playbook "${PLAYBOOKosddevfail}"
-
-# Disable scrubbing - per RHCS ADMIN Guide
-ceph osd set noscrub
-ceph osd set nodeep-scrub
 
 # Poll ceph status (in a bkrgd process) 
 Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
@@ -179,8 +179,15 @@ kill $PIDpbench
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
 #####-----------------------
 
-mv /var/lib/pbench-agent/pbench-user-benchmark* /var/www/html/pub/run.$ts
-updatelog "END: Pbench dir moved to /var/www/html/pub/run.$ts" $LOGFILE
+# Copy the LOGFILE, PBENCH and COSbench results to /var/www/html/pub
+Cresults=`ls -tr $cosPATH/archive | tail -n 1`
+Dpath="/var/www/html/pub/$Cresults.$ts"
+mkdir $Dpath
+cp -r $cosPATH/archive/$Cresults $Dpath/.
+Presults=`ls -tr /var/lib/pbench-agent | grep pbench-user-benchmark | tail -n 1`
+cp -r /var/lib/pbench-agent/$Presults $Dpath/.
+
+updatelog "END: Pbench and COSbench results copied to $Dpath" $LOGFILE
 
 ##################################
 # END of I/O workload and monitoring
@@ -204,5 +211,8 @@ Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 # update logfile with completion timestamp and end email notifications
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
 echo " " | mail -s "ceph recovery complete" jharriga@redhat.com ekaynar@redhat.com
+
+# copy LOGFILE to results dir
+cp $LOGFILE $Dpath/.
 
 # END
