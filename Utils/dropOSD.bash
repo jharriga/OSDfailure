@@ -38,7 +38,7 @@ touch $log           # start the logfile
 osdID=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
 osdDEV=`df |grep ceph-${osdID} |awk '{print $1}'`
 osdZAP=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print $1}'|tr -d '[0-9]'`
-logit "osdID= $osdID   osdDEV= $osdDEV  zapDEV= $zapDEV" $log
+logit "osdID= $osdID   osdDEV= $osdDEV  zapDEV= $osdZAP" $log
 
 # Determine if cluster is Bluestore or Filestore
 ostore=`ceph osd metadata $osdID | grep osd_objectstore | awk '{print $2}'`
