@@ -33,65 +33,66 @@ failtime=$1
 log=$2
 touch $log           # start the logfile
 
-#
+#--------------------------------------------------------------
 # Get target OSD info before stopping
-origOSD=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
-dev=`df |grep ceph-${origOSD} |awk '{print $1}'`
-#weight=`ceph osd tree|grep "osd.${origOSD} "|awk '{print $2}'`
-weight=`ceph osd tree|grep "osd.${origOSD} "|awk '{print $3}'`
+osdID=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
+osdDEV=`df |grep ceph-${osdID} |awk '{print $1}'`
 
-journal=`ls -l /var/lib/ceph/osd/ceph-${origOSD}/journal | cut -d\> -f2`
+# Determine if cluster is Bluestore or Filestore
+ostore=`ceph osd metadata $osdID | grep osd_objectstore | awk '{print $2}'`
+case "$ostore" in
+    *filestore*) 
+        osdTYPE="filestore"
+        FSjournal=`ls -l /var/lib/ceph/osd/ceph-${osdID}/journal | cut -d\> -f2`
+        FSweight=`ceph osd tree | grep "osd.${osdID} "|awk '{print $3}'`
+        prepareCMD="ceph-disk prepare --bluestore --osd-id $osdID $osdDEV $FSjournal"
+        ;;
+    *bluestore*)
+        osdTYPE="bluestore"
+        BSdb=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print substr($11, 1, length($11) - 1)}'`
+        BSwal=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print $13}'`
+        prepareCMD="ceph-disk prepare --bluestore --osd-id $osdID --block.db $BSdb --block.wal $BSwal $osdDEV"
+        ;;
+    *)
+        error_exit "dropOSD: Cluster metadata check failed."
+        ;;
+esac
+
+logit "Cluster type is: $osdTYPE" $log
 
 # Issue the OSD stop cmd
-if systemctl stop ceph-osd@${origOSD}; then
-    logit "dropOSD: stopped OSD ${origOSD}" $log
+if systemctl stop ceph-osd@${osdID}; then
+    logit "dropOSD: stopped OSD ${osdID}" $log
 else
-    error_exit "dropOSD: failed to stop OSD ${origOSD}"
+    error_exit "dropOSD: failed to stop OSD ${osdID}"
 fi
 # Wait for failuretime
 sleep "${failtime}"
 
-# ADMIN steps to address dropped OSD event
-#   - remove dropped OSD
-ceph osd out osd.${origOSD}
-ceph osd crush remove osd.${origOSD}
-ceph auth del osd.${origOSD}
-ceph osd rm osd.${origOSD} ; sleep 5
-umount -f /var/lib/ceph/osd/ceph-${origOSD}
+# ADMIN steps to address dropped OSD device event
+#   - remove dropped OSD and prepare for re-use
+logit "Removing dropped OSD and preparing for re-use" $log
+ceph osd out osd.$osdID                         # mark the OSD out
+umount -f /var/lib/ceph/osd/ceph-$osdID         # unmount it
+ceph-disk zap $osdID                            # zap it - removes partitions
+ceph osd destroy $osdID --yes-i-really-mean-it  # destroy so ID can be re-used
+#sleep 5                                         # let things settle
 
-#   - create new OSD
-newOSD=`ceph osd create ${uuid} ${origOSD}` ; sleep 5
-if [[ ! "${newOSD}" ]]; then
-    error_exit "dropOSD: Failed to create OSD"
+#   - create new OSD, based on $osdTYPE
+logit "Issuing prepare command: $prepareCMD" $log
+osdNEW=$prepareCMD
+if [[ ! "${osdNEW}" ]]; then
+    error_exit "dropOSD: Failed to prepare OSD"
 fi
-logit "dropOSD: created osd.${newOSD}" $log
-mkdir /var/lib/ceph/osd/ceph-${newOSD} &> /dev/null
-mount -o noatime ${dev} /var/lib/ceph/osd/ceph-${newOSD}
-logit "dropOSD: removing prior contents of ${dev}" $log
-rm -rf /var/lib/ceph/osd/ceph-${newOSD}/*
-ceph-osd -i ${newOSD} --mkfs --mkkey --osd-uuid ${uuid} ; sleep 5
-
-#   - add new OSD
-ceph auth add osd.${newOSD} mon 'allow *' osd 'allow profile osd' -i /var/lib/ceph/osd/ceph-${newOSD}/keyring
-ceph osd crush add ${newOSD} ${weight} host=`hostname -s`
-
-# if original journal was softlink, recreate it
-if [[ $journal ]] ; then
-    logit "dropOSD: setting journal to original softlink" $log
-    ceph-osd -i ${newOSD} --flush-journal
-    rm -f /var/lib/ceph/osd/ceph-${newOSD}/journal
-    ln -s ${journal} /var/lib/ceph/osd/ceph-${newOSD}/journal
-    ceph-osd -i ${newOSD} --mkjournal
-fi
-chown -R ceph:ceph /var/lib/ceph/osd/ceph-${newOSD}
+# now activate
+ceph-disk activate $osdDEV
+logit "dropOSD: prepared and activated new OSD" $log
 
 # Start the new OSD
-systemctl start ceph-osd@${newOSD}
-if [[ `systemctl status ceph-osd@${newOSD} |grep Active:|grep running` ]] ; then
-    logit "dropOSD: started new OSD ${newOSD}" $log
+systemctl start ceph-osd@${osdID}
+if [[ `systemctl status ceph-osd@${osdID} |grep Active:|grep running` ]] ; then
+    logit "dropOSD: started new OSD ${osdID}" $log
 else
-    error_exit "ceph-osd@${newOSD}.service failed to start"
+    error_exit "ceph-osd@${osdID}.service failed to start"
 fi
 # END
-
-
