@@ -74,7 +74,7 @@ sleep "${failtime}"
 logit "Removing dropped OSD and preparing for re-use" $log
 ceph osd out osd.$osdID                         # mark the OSD out
 umount -f /var/lib/ceph/osd/ceph-$osdID         # unmount it
-ceph-disk zap $osdID                            # zap it - removes partitions
+ceph-disk zap $osdDEV                           # zap it - removes partitions
 ceph osd destroy $osdID --yes-i-really-mean-it  # destroy so ID can be re-used
 #sleep 5                                         # let things settle
 
