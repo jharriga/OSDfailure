@@ -10,7 +10,6 @@
 <!-- Initialization -->
     <workstage name="init_containers">
         <work type="init" workers="1" config="containers=r(1,PREPAREnumCont)"/>
-        </work>
     </workstage>
 
 <!-- Prepare using container counts, object counts and object sizes from vars.shinc -->
