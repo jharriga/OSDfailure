@@ -34,6 +34,8 @@ ssh "root@${mon}" ceph status > /tmp/ceph.status
 #until grep HEALTH_OK /tmp/ceph.status; do
 # since scrubbing has been disabled, cluster reports HEALTH_WARN status
 while grep HEALTH_WARN /tmp/ceph.status; do
+    sleep "${interval}"
+    ssh "root@${mon}" ceph status > /tmp/ceph.status
     totPG_cnt=`grep -o '[0-9]\{1,\} pools, [0-9]\{1,\} pgs' /tmp/ceph.status | \
       awk '{print $3}'`
     cleanPG_cnt=`grep -o '[0-9]\{1,\} active+clean' /tmp/ceph.status | \
@@ -46,8 +48,6 @@ while grep HEALTH_WARN /tmp/ceph.status; do
     uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status | \
       awk '{print $1}'`
     updatelog "Total PGs ${totPG_cnt} : unclean PGs ${uncleanPG_cnt}" $log
-    sleep "${interval}"
-    ssh "root@${mon}" ceph status > /tmp/ceph.status
 done
 
 updatelog "** Recovery completed: POLLCEPH ending" $log
