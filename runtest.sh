@@ -182,6 +182,7 @@ sleep "${t_phase3R}"
 # Now kill off the background processes: POLLceph and PBENCH-COSbench (I/O workload)
 kill $PIDpollceph2
 kill $PIDpbench
+pbench-kill-tools &> /dev/null            # forceably stop the pbench tools
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
 #####-----------------------
 
