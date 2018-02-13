@@ -48,6 +48,8 @@ while grep HEALTH_WARN /tmp/ceph.status; do
     uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status | \
       awk '{print $1}'`
     updatelog "Total PGs ${totPG_cnt} : unclean PGs ${uncleanPG_cnt}" $log
+    recovery_str=`grep recovery: /tmp/ceph.status`
+    updatelog "  ${recovery_str}" $log
 done
 
 updatelog "** Recovery completed: POLLCEPH ending" $log
