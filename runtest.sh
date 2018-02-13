@@ -109,6 +109,7 @@ logbase=$(basename $LOGFILE)
 logtmp="/tmp/${logbase}"
 ## Drop the OSDdevice using SSH - blocks for failuretime
 t_phase2F="${failuretime}${unittime}"
+updatelog "BEGIN: OSDdevice - start sleeping ${t_phase2F}" $LOGFILE
 ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${t_phase2F}" "${logtmp}"
 # bring the remote logfile back and append to LOGFILE
 scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
@@ -117,7 +118,7 @@ rm -f "${logtmp}"
 
 # Let things run for 'recoverytime'
 t_phase2R="${recoverytime}${unittime}"
-updatelog "BEGIN: OSDdevice - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
+updatelog "CONTINUE: OSDdevice - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase2R}"
 
 # Now kill off the POLLCEPH background process
@@ -156,6 +157,7 @@ done
 
 # Wait for failuretime
 t_phase3F="${failuretime}${unittime}"
+updatelog "BEGIN: OSDnode - start sleeping ${t_phase3F}" $LOGFILE
 sleep "${t_phase3F}"
 
 # Reboot OSDnode
@@ -170,7 +172,7 @@ done
 
 # Let things run for 'recoverytime'
 t_phase3R="${recoverytime}${unittime}"
-updatelog "OSDnode: sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
+updatelog "CONTINUE: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase3R}"
 
 # Now kill off the background processes: POLLceph and PBENCH-COSbench (I/O workload)
