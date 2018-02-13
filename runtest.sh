@@ -170,6 +170,10 @@ for iface in ${IFACE_arr[@]}; do
     ssh "root@${OSDhostname}" ifup "${iface}"
 done
 
+# Forcebly restart the ceph services - to get the OSDs back up/in
+sleep 2s                           # short pause
+ssh "root@${OSDhostname}" ceph-disk activate-all
+
 # Let things run for 'recoverytime'
 t_phase3R="${recoverytime}${unittime}"
 updatelog "CONTINUE: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
