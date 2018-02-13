@@ -48,7 +48,7 @@ case "$ostore" in
         FSjournal=`ls -l /var/lib/ceph/osd/ceph-${osdID}/journal | cut -d\> -f2`
         FSweight=`ceph osd tree | grep "osd.${osdID} "|awk '{print $3}'`
         logit "FSjournal= $FSjournal   FSweight= $FSweight" $log
-        prepareCMD="ceph-disk prepare --bluestore --osd-id $osdID $osdDEV $FSjournal"
+        prepareCMD="ceph-disk prepare --filestore --osd-id $osdID $osdDEV $FSjournal"
         ;;
     *bluestore*)
         osdTYPE="bluestore"
