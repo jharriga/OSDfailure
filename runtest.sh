@@ -69,7 +69,7 @@ ceph osd set nodeep-scrub
 
 #>>> PHASE 1: no failures <<<
 # Start the COSbench I/O workload
-pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml}" &
+pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE" &
 #sleep 100m &           ## DEBUG
 #updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
 
