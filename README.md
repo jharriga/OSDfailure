@@ -6,7 +6,6 @@ scripts (dropOSD.bash) to inject failures.
 For a writeup of how the ceph cluster was installed see:
  https://github.com/ekaynar/Benchmarks/blob/master/ceph-ansible/README.md
 
-Could be adapted to use ansible playbooks to inject failures
 
 FILE INVENTORY:
 * vars.shinc - global variables
