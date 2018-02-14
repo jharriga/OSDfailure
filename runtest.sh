@@ -179,12 +179,14 @@ t_phase3R="${recoverytime}${unittime}"
 updatelog "CONTINUE: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase3R}"
 
-# Now kill off the background processes: POLLceph and PBENCH-COSbench (I/O workload)
-kill $PIDpollceph2
-kill $PIDpbench
-pbench-kill-tools &> /dev/null            # forceably stop the pbench tools
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
 #####-----------------------
+# Wait for pbench to complete
+while ps -p $PIDpbench > /dev/null; do
+    updatelog "Waiting for pbench-user-benchmark to complete" $LOGFILE
+    sleep 1m
+done
+updatelog "pbench-user-benchmark process completed" $LOGFILE
 
 # Copy the LOGFILE, PBENCH and COSbench results to /var/www/html/pub
 Cresults=`ls -tr $cosPATH/archive | tail -n 1`
@@ -194,7 +196,7 @@ cp -r $cosPATH/archive/$Cresults $Dpath/.
 Presults=`ls -tr /var/lib/pbench-agent | grep pbench-user-benchmark | tail -n 1`
 cp -r /var/lib/pbench-agent/$Presults $Dpath/.
 
-updatelog "END: Pbench and COSbench results copied to $Dpath" $LOGFILE
+updatelog "FINALIZING: Pbench and COSbench results copied to $Dpath" $LOGFILE
 
 ##################################
 # END of I/O workload and monitoring
