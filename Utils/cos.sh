@@ -13,10 +13,11 @@ source "$myPath/../vars.shinc"
 source "$myPath/../Utils/functions.shinc"
 
 f_name=$1
+log=$2
 OUTPUT=$(sh $cosPATH/cli.sh submit $f_name) &&
-updatelog "$OUTPUT" $LOGFILE
+updatelog "$OUTPUT" $log
 jobId=$(echo $OUTPUT |awk '{print $4}') &&
-updatelog "COSbench jobID is: $jobId - Started" $LOGFILE
+updatelog "COSbench jobID is: $jobId - Started" $log
 
 running=1
 while [ $running -eq 1 ]; do
@@ -28,4 +29,4 @@ while [ $running -eq 1 ]; do
     fi
 done
 
-updatelog "COSbench jobID: $jobId - Completed" $LOGFILE
+updatelog "COSbench jobID: $jobId - Completed" $log
