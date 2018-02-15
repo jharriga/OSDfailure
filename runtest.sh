@@ -171,8 +171,10 @@ for iface in ${IFACE_arr[@]}; do
 done
 
 # Forcebly restart the ceph services - to get the OSDs back up/in
+# and restart the RGW service on the OSDnode
 sleep 2s                           # short pause
 ssh "root@${OSDhostname}" ceph-disk activate-all
+ssh "root@${OSDhostname}" systemctl restart ceph-radosgw@rgw.`hostname -s`.service
 
 # Let things run for 'recoverytime'
 t_phase3R="${recoverytime}${unittime}"
