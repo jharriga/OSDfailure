@@ -58,7 +58,11 @@ host1=`ssh "root@${OSDhostname}" hostname`
 updatelog "> OSDhost is ${OSDhostname} : ${host1}" $LOGFILE
 host2=`ssh "root@${MONhostname}" hostname`
 updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
-
+# record cluster capacity stats
+var1=`ceph df | head -n 5`
+var2=`ceph df | grep rgw.buckets.data`
+updatelog "$var1" $LOGFILE
+updatelog "$var2" $LOGFILE
 #
 # END: Housekeeping
 #--------------------------------------
@@ -89,6 +93,11 @@ else
     error_exit "pbench-user-benchmark cosbench FAILED"
 fi
 updatelog "END: No Failures - completed sleeping" $LOGFILE
+# record cluster capacity stats
+var1=`ceph df | head -n 5`
+var2=`ceph df | grep rgw.buckets.data`
+updatelog "$var1" $LOGFILE
+updatelog "$var2" $LOGFILE
 
 #>>> PHASE 2: single osd device failure <<<
 #---------------------------------------
@@ -124,6 +133,11 @@ sleep "${t_phase2R}"
 # Now kill off the POLLCEPH background process
 kill $PIDpollceph1
 updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
+# record cluster capacity stats
+var1=`ceph df | head -n 5`
+var2=`ceph df | grep rgw.buckets.data`
+updatelog "$var1" $LOGFILE
+updatelog "$var2" $LOGFILE
 # END - OSD device failure sequence
 #--------------------------------------
 
@@ -182,6 +196,11 @@ updatelog "CONTINUE: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patri
 sleep "${t_phase3R}"
 
 updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
+# record cluster capacity stats
+var1=`ceph df | head -n 5`
+var2=`ceph df | grep rgw.buckets.data`
+updatelog "$var1" $LOGFILE
+updatelog "$var2" $LOGFILE
 #####-----------------------
 # Wait for pbench to complete
 while ps -p $PIDpbench > /dev/null; do
@@ -226,6 +245,12 @@ ceph tell osd.* injectargs '--osd-recovery-sleep-hdd=0.1' &> /dev/null
 # Call pollceph one final time, expecting HEALTH_OK and immediate return
 sleep "${sleeptime}"
 Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
+
+# record cluster capacity stats
+var1=`ceph df | head -n 5`
+var2=`ceph df | grep rgw.buckets.data`
+updatelog "$var1" $LOGFILE
+updatelog "$var2" $LOGFILE
 
 # update logfile with completion timestamp and end email notifications
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
