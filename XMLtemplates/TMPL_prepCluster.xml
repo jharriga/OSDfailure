@@ -2,7 +2,7 @@
 <workload name="prepCluster" description="RGW failure testing">
 
 <!-- Initialization -->
-  <storage type="PREPAREstorage_type" config="PREPAREtimeout" retry="PREPAREretry"/>
+  <storage type="PREPAREstorage_type" config="timeout=PREPAREtimeout" retry="PREPAREretry"/>
   <auth type="PREPAREauth_type" config="PREPAREconfig" />
 
   <workflow>
