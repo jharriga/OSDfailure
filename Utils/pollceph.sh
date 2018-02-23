@@ -38,7 +38,7 @@ while grep HEALTH_WARN /tmp/ceph.status; do
     ssh "root@${mon}" ceph status > /tmp/ceph.status
     totPG_cnt=`grep -o '[0-9]\{1,\} pools, [0-9]\{1,\} pgs' /tmp/ceph.status | \
       awk '{print $3}'`
-    cleanPG_cnt=`grep -o '[0-9]\{1,\}\sactive+clean' /tmp/ceph.status | \
+    cleanPG_cnt=`grep -o '[0-9]\{1,\}\s*active+clean$' /tmp/ceph.status | \
       awk '{print $1}'`
     # Test that all PGs are clean - if so exit the while loop
     if [ "$cleanPG_cnt" -eq "$totPG_cnt" ]; then
