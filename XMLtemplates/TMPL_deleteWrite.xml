@@ -35,7 +35,7 @@ Three Phases:
     </workstage>
 
 
-    <workstage name="node_failure">
+    <workstage name="node_failure" closuredelay="10">
         <work name="writeDelete3" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
              <operation name="writeOP" type="write" ratio="60" config="containers=c(3);objects=RUNTESTwrObj;sizes=RUNTESTsizes" />
 	    <operation name="deleteOP" type="delete" ratio="40" config="containers=c(3);objects=RUNTESTdelObj" />
