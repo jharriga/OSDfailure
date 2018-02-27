@@ -37,7 +37,7 @@ THREE WORKSTAGES:
         </work>
      </workstage>
 
- <workstage name="node_failure">
+ <workstage name="node_failure" closuredelay="10">
          <work name="phase3" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
  	    <operation name="readOP" type="read" ratio="RUNTESTrdRatio" config="RUNTESTrdConf" />
             <operation name="listOP" type="list" ratio="RUNTESTlistRatio" config="RUNTESTlistConf" />
