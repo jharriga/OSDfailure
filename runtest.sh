@@ -99,6 +99,9 @@ var1=`echo; ceph df | head -n 5`
 var2=`echo; ceph df | grep rgw.buckets.data`
 updatelog "$var1$var2" $LOGFILE
 
+# sleep for closuredelay=10 directive in ioWorkload.xml
+sleep 10s
+
 #>>> PHASE 2: single osd device failure <<<
 #---------------------------------------
 # BEGIN the OSD device failure sequence
@@ -138,6 +141,9 @@ updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 var1=`echo; ceph df | head -n 5`
 var2=`echo; ceph df | grep rgw.buckets.data`
 updatelog "$var1$var2" $LOGFILE
+
+# sleep for closuredelay=10 directive in ioWorkload.xml
+sleep 10s
 
 # END - OSD device failure sequence
 #--------------------------------------
