@@ -202,12 +202,15 @@ t_phase3R="${recoverytime}${unittime}"
 updatelog "CONTINUE: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase3R}"
 
-updatelog "END: OSDnode - Completed waiting and stopped bkgrd processes" $LOGFILE
+updatelog "END: OSDnode - Completed waiting." $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
 var2=`echo; ceph df | grep rgw.buckets.data`
 updatelog "$var1$var2" $LOGFILE
+
+# sleep for closuredelay=10 directive in ioWorkload.xml
+sleep 10s
 
 #####-----------------------
 # Wait for pbench to complete
