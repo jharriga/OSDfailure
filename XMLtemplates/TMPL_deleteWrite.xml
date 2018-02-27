@@ -19,7 +19,7 @@ Three Phases:
 <!-- Operation mix is: 60% write, 40% delete
      -->
 
-    <workstage name="no_failure">
+    <workstage name="no_failure" closuredelay="10">
         <work name="writeDelete1" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
             <operation name="writeOP" type="write" ratio="60" config="containers=c(1);objects=RUNTESTwrObj;sizes=RUNTESTsizes" />
 	    <operation name="deleteOP" type="delete" ratio="40" config="containers=c(1);objects=RUNTESTdelObj" />
@@ -27,7 +27,7 @@ Three Phases:
     </workstage>
 
 
-    <workstage name="osd_failure">
+    <workstage name="osd_failure" closuredelay="10">
         <work name="writeDelete2" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
             <operation name="writeOP" type="write" ratio="60" config="containers=c(2);objects=RUNTESTwrObj;sizes=RUNTESTsizes" />
 	    <operation name="deleteOP" type="delete" ratio="40" config="containers=c(2);objects=RUNTESTdelObj" />
