@@ -4,25 +4,28 @@
 #   Executes the COSbench workloads and injects failures at specific
 #   time periods
 #
-#   Ensure the testpool is available and 50% full
 #   Disable ceph scrubbing 
-#   Start COSbench workload and sleep for 'jobtime' minutes
+#   Start COSbench workload
+#   Sleep for 'starttime' minutes
 #   Stop OSD device and leave it down for 'failuretime' minutes
 #     - poll and record ceph status every 'polltime' minutes
 #   Add the OSD back into cluster and wait for 'recoverytime'
 #     - poll and record ceph status every 'polltime' minutes
-#   Stop OSD node NIC and leave it down for 'failuretime' minutes
+#   Sleep for 'starttime' minutes
+#   Stop OSD node NICs and leave them down for 'failuretime' minutes
 #     - poll and record ceph status every 'polltime' minutes
-#   Add the OSD node NIC back into cluster and wait for 'recoverytime'
+#   Add the OSD node NICs back into cluster and wait for 'recoverytime'
 #     - poll and record ceph status every 'polltime' minutes
 #   Stop COSbench workload
-#   Delete the testpool to accelerate recovery
+#   Raise recovery default settings accelerate recovery
 #   Wait for recovery and record timestamp for ('active&clean')
-#   Enable Ceph scrubbing
+#   Restore default settings: recovery and scrubbing
 #
 #   Proposed variable settings: (see vars.shinc)
+#     - starttime = 10min
 #     - failuretime = 10 min
 #     - recoverytime = 60 min
+#     - closuretime = 30s
 #     - polltime = 1 min
 #####################################################################
 
@@ -58,6 +61,8 @@ host1=`ssh "root@${OSDhostname}" hostname`
 updatelog "> OSDhost is ${OSDhostname} : ${host1}" $LOGFILE
 host2=`ssh "root@${MONhostname}" hostname`
 updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
+host3=`ssh "root@${RGWhostname}" hostname`
+updatelog "> RGWhost is ${RGWhostname} : ${host3}" $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
@@ -82,12 +87,15 @@ updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGF
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ps -p $PIDpbench > /dev/null; then
-    # match the timing of the other two phases (failuretime + recoverytime)
+    # match the timing of the other two phases
+    t_phase1S="${starttime}${unittime}"            # start duration
+    updatelog "START: No Failures - start sleeping ${t_phase1S}" $LOGFILE
+    sleep "${t_phase1S}"
     t_phase1F="${failuretime}${unittime}"            # failure duration
-    updatelog "BEGIN: No Failures - start sleeping ${t_phase1F}" $LOGFILE
+    updatelog "FAILURE: No Failures - start sleeping ${t_phase1F}" $LOGFILE
     sleep "${t_phase1F}"
     t_phase1R="${recoverytime}${unittime}"           # recovery duration
-    updatelog "CONTINUE: No Failures - start sleeping ${t_phase1R}" $LOGFILE
+    updatelog "RECOVERY: No Failures - start sleeping ${t_phase1R}" $LOGFILE
     sleep "${t_phase1R}"
 else
     error_exit "pbench-user-benchmark cosbench FAILED"
@@ -99,12 +107,15 @@ var1=`echo; ceph df | head -n 5`
 var2=`echo; ceph df | grep rgw.buckets.data`
 updatelog "$var1$var2" $LOGFILE
 
-# sleep for closuredelay=10 directive in ioWorkload.xml
-sleep 10s
+# sleep for closuredelay directive in ioWorkload.xml
+sleep "${closuretime}"
 
 #>>> PHASE 2: single osd device failure <<<
 #---------------------------------------
 # BEGIN the OSD device failure sequence
+t_phase2S="${starttime}${unittime}"            # start duration
+updatelog "START: OSDdevice - start sleeping ${t_phase2S}" $LOGFILE
+sleep "${t_phase2S}"
 
 # Poll ceph status (in a bkrgd process) 
 Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
@@ -121,7 +132,7 @@ logbase=$(basename $LOGFILE)
 logtmp="/tmp/${logbase}"
 ## Drop the OSDdevice using SSH - blocks for failuretime
 t_phase2F="${failuretime}${unittime}"
-updatelog "BEGIN: OSDdevice - start sleeping ${t_phase2F}" $LOGFILE
+updatelog "FAILURE: OSDdevice - start sleeping ${t_phase2F}" $LOGFILE
 ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${t_phase2F}" "${logtmp}"
 # bring the remote logfile back and append to LOGFILE
 scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
@@ -130,7 +141,7 @@ rm -f "${logtmp}"
 
 # Let things run for 'recoverytime'
 t_phase2R="${recoverytime}${unittime}"
-updatelog "CONTINUE: OSDdevice - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
+updatelog "RECOVERY: OSDdevice - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase2R}"
 
 # Now kill off the POLLCEPH background process
@@ -142,8 +153,8 @@ var1=`echo; ceph df | head -n 5`
 var2=`echo; ceph df | grep rgw.buckets.data`
 updatelog "$var1$var2" $LOGFILE
 
-# sleep for closuredelay=10 directive in ioWorkload.xml
-sleep 10s
+# sleep for closuredelay directive in ioWorkload.xml
+sleep "${closuretime}"
 
 # END - OSD device failure sequence
 #--------------------------------------
@@ -153,6 +164,10 @@ sleep 10s
 # The 'OSD node' failure sequence
 # scrubbing is already disabled
 #
+t_phase3S="${starttime}${unittime}"            # start duration
+updatelog "START: OSDnode - start sleeping ${t_phase3S}" $LOGFILE
+sleep "${t_phase3S}"
+
 # Poll ceph status (in a bkrgd process) 
 Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}" &
 PIDpollceph2=$!
@@ -178,7 +193,7 @@ done
 
 # Wait for failuretime
 t_phase3F="${failuretime}${unittime}"
-updatelog "BEGIN: OSDnode - start sleeping ${t_phase3F}" $LOGFILE
+updatelog "FAILURE: OSDnode - start sleeping ${t_phase3F}" $LOGFILE
 sleep "${t_phase3F}"
 
 # Reboot OSDnode
@@ -199,7 +214,7 @@ ssh "root@${OSDhostname}" systemctl restart ceph-radosgw@rgw.`hostname -s`.servi
 
 # Let things run for 'recoverytime'
 t_phase3R="${recoverytime}${unittime}"
-updatelog "CONTINUE: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
+updatelog "RECOVERY: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase3R}"
 
 updatelog "END: OSDnode - Completed waiting." $LOGFILE
@@ -209,8 +224,8 @@ var1=`echo; ceph df | head -n 5`
 var2=`echo; ceph df | grep rgw.buckets.data`
 updatelog "$var1$var2" $LOGFILE
 
-# sleep for closuredelay=10 directive in ioWorkload.xml
-sleep 10s
+# sleep for closuredelay directive in ioWorkload.xml
+sleep "${closuretime}"
 
 #####-----------------------
 # Wait for pbench to complete
