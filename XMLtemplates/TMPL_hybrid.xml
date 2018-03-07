@@ -19,7 +19,7 @@ THREE WORKSTAGES:
 <!-- Operation mix is: 50% PUT, 30% GET, 10% bucket listing, 10% deletes
 -->
 
-    <workstage name="no_failure" closuredelay="10">
+    <workstage name="no_failure" closuredelay="RUNTESTclosuretime">
         <work name="phase1" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
 	    <operation name="readOP" type="read" ratio="RUNTESTrdRatio" config="RUNTESTrdConf" />
             <operation name="listOP" type="list" ratio="RUNTESTlistRatio" config="RUNTESTlistConf" />
@@ -28,7 +28,7 @@ THREE WORKSTAGES:
         </work>
     </workstage>
 
-    <workstage name="osd_failure" closuredelay="10">
+    <workstage name="osd_failure" closuredelay="RUNTESTclosuretime">
         <work name="phase2" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
  	    <operation name="readOP" type="read" ratio="RUNTESTrdRatio" config="RUNTESTrdConf" />
             <operation name="listOP" type="list" ratio="RUNTESTlistRatio" config="RUNTESTlistConf" />
@@ -37,7 +37,7 @@ THREE WORKSTAGES:
         </work>
      </workstage>
 
- <workstage name="node_failure" closuredelay="10">
+ <workstage name="node_failure" closuredelay="RUNTESTclosuretime">
          <work name="phase3" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
  	    <operation name="readOP" type="read" ratio="RUNTESTrdRatio" config="RUNTESTrdConf" />
             <operation name="listOP" type="list" ratio="RUNTESTlistRatio" config="RUNTESTlistConf" />
