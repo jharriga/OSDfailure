@@ -6,10 +6,12 @@
 # Runtimes for various phases
 # WARNING: if you change these you need to re-run 'writeXML.sh'
 unittime="m"                 # unit for time values (s=sec; m=min; h=hr)
+starttime="10"
 failuretime="10"
 recoverytime="60"
-phasetime=$(( failuretime + recoverytime ))
+phasetime=$(( starttime + failuretime + recoverytime ))
 pollinterval="1m"            # pollceph.sh interval to check ceph status
+closuretime="30"             # added to end of COSbench workstages
 sleeptime="2"                # CONSTANT always in seconds
 #  Calculate runtime  (in sec)for COSbench workload XML file
 if [ $unittime == "s" ]; then
@@ -32,13 +34,18 @@ runtime_sec=$(( (time_mult * phasetime) + sleeptime ))
 #
 rgwUSER="johndoe:swift"            # username
 rgwURL="rgw:8080"                  # auth_url connection point
+#rgwURL="localhost:5000"           # HAproxy auth_url connection point
 prepareWORKERS=24                  # number of workers to use for preparing the Cluster
 runtestWORKERS=96                  # number of workers for running the I/O Workload
+#runtestWORKERS=192       # number of workers for running delWrite Workload
+#runtestWORKERS=240       # number of workers for running HYBRID Workload
 # Object sizes
 objSIZES="h(4|4|34,64|64|33,65536|65536|33)KB"
 # Number of Containers and Objects
 numCONT=100
 numOBJ=3273
+#numOBJ=43397         # for HYBRID
+#numOBJ=21698         # for delWrite
 numOBJincr=$(( (numOBJ + 1) ))      # increment by 1
 numOBJmax=$(( (numOBJ * 10) ))      # multiply by 10 for highest Object count
 # Ratios for operation types - MUST add up to 100%
@@ -107,6 +114,7 @@ declare -a RTkeys_arr=("RUNTESTstorage_type"
                        "RUNTESTlistConf"
                        "RUNTESTwrObj"
                        "RUNTESTdelObj"
+                       "RUNTESTclosuretime"
                        )
 declare -a RTvalues_arr=("swift"               # storage_type
                          "60000"               # timeout
@@ -127,6 +135,7 @@ declare -a RTvalues_arr=("swift"               # storage_type
                          "${listCONF}"         # config for List operations
                          "${wrOBJ}"            # object range for Write ops
                          "${delOBJ}"           # object range for Delete ops
+                         "${closuretime}"      # workstage closuredelay
                          )
  
 #------------------------
