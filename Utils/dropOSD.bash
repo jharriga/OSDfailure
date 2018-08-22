@@ -37,32 +37,51 @@ touch $log           # start the logfile
 # Get target OSD info before stopping
 osdID=`df |grep ceph- |awk '{print $6}' |cut -d- -f2|sort -h|tail -1`
 osdPART=`df |grep ceph-${osdID} |awk '{print $1}'`
-osdDEV=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print $1}'|tr -d '[0-9]'`
-logit "osdID= $osdID   osdDEV= $osdDEV  osdPART= $osdPART" $log
 
 # Determine if cluster is Bluestore or Filestore
 ostore=`ceph osd metadata $osdID | grep osd_objectstore | awk '{print $2}'`
+logit "ostore= $ostore   osdID= $osdID   osdPART= $osdPART" $log
 case "$ostore" in
     *filestore*) 
         osdTYPE="filestore"
         FSjournal=`ls -l /var/lib/ceph/osd/ceph-${osdID}/journal | cut -d\> -f2`
         FSweight=`ceph osd tree | grep "osd.${osdID} "|awk '{print $3}'`
-        logit "FSjournal= $FSjournal   FSweight= $FSweight" $log
-        prepareCMD="ceph-disk prepare --filestore --osd-id $osdID $osdDEV $FSjournal"
-        ;;
+        logit "deployTYPE= $deployTYPE   FSjournal= $FSjournal   FSweight= $FSweight" $log
+        if [[ $deployTYPE = *"disk"* ]]; then
+            osdDEV=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print $1}'|tr -d '[0-9]'`
+            zapCMD="ceph-disk zap $osdDEV"
+            prepareCMD="ceph-disk prepare --filestore --osd-id $osdID $osdDEV $FSjournal"
+            activateCMD="ceph-disk activate $osdPART"
+        elif [[ $deployTYPE = *"volume"* ]]; then
+            osdDEV=`ceph-volume lvm list |grep -A2 "\bosd.$osdID\b" | awk '{getline; getline; print $2}' | grep -oP "/dev/\K.*"`
+            zapCMD="ceph-volume lvm zap $osdDEV"
+            prepareCMD="ceph-volume lvm prepare --filestore --osd-id $osdID --data $osdDEV --journal $FSjournal"
+            activateCMD="ceph-volume lvm activate --filestore --all"
+        else
+            error_exit "dropOSD: deployTYPE value invalid"
     *bluestore*)
         osdTYPE="bluestore"
         BSdb=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print substr($11, 1, length($11) - 1)}'`
         BSwal=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print $13}'`
-        logit "BSdb= $BSdb   BSwal= $BSwal" $log
-        prepareCMD="ceph-disk prepare --bluestore --osd-id $osdID --block.db $BSdb --block.wal $BSwal $osdDEV"
-        ;;
+        logit "deployTYPE= $deployTYPE   BSdb= $BSdb   BSwal= $BSwal" $log
+        if [[ $deployTYPE = *"disk"* ]]; then
+            osdDEV=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print $1}'|tr -d '[0-9]'`
+            zapCMD="ceph-disk zap $osdDEV"
+            prepareCMD="ceph-disk prepare --bluestore --osd-id $osdID --block.db $BSdb --block.wal $BSwal $osdDEV"
+            activateCMD="ceph-disk activate $osdPART"
+        elif [[ $deployTYPE = *"volume"* ]]; then
+            osdDEV=`ceph-volume lvm list |grep -A2 "\bosd.$osdID\b" | awk '{getline; getline; print $2}' | grep -oP "/dev/\K.*"`
+            zapCMD="ceph-volume lvm zap $osdDEV"
+            prepareCMD="ceph-volume lvm prepare --bluestore --osd-id $osdID --block.db $BSdb --block.wal $BSwal $osdDEV"
+            activateCMD="ceph-volume lvm activate --bluestore --all"
+        else
+            error_exit "dropOSD: deployTYPE value invalid"
     *)
-        error_exit "dropOSD: Cluster metadata check failed."
+        error_exit "dropOSD: Cluster metadata check CASE Statement failed."
         ;;
 esac
 
-logit "Cluster type is: $osdTYPE" $log
+logit "Cluster type is: $osdTYPE   osdDEV= $osdDEV" $log
 
 # Issue the OSD stop cmd
 if systemctl stop ceph-osd@${osdID}; then
@@ -77,21 +96,25 @@ sleep "${failtime}"
 #   - remove dropped OSD and prepare for re-use
 logit "Removing dropped OSD and preparing for re-use" $log
 ceph osd out osd.$osdID                         # mark the OSD out
-umount -f /var/lib/ceph/osd/ceph-$osdID         # unmount it
-ceph-disk zap $osdDEV                           # zap it - removes partitions
+if [[ $ostore = *"filestore"* ]]; then
+    umount -f /var/lib/ceph/osd/ceph-$osdID         # unmount it
+fi
+logit "Issuing zap command: $zapCMD" $log
+eval $zapCMD
 ceph osd destroy $osdID --yes-i-really-mean-it  # destroy so ID can be re-used
 
 #   - create new OSD, based on $osdTYPE
 logit "Issuing prepare command: $prepareCMD" $log
 eval $prepareCMD
 # now activate
-ceph-disk activate $osdPART
+logit "Issuing activate command: $activateCMD" $log
+eval $activateCMD
 logit "dropOSD: prepared and activated new OSD" $log
 
 # Start the new OSD
 systemctl start ceph-osd@${osdID}
 if [[ `systemctl status ceph-osd@${osdID} |grep Active:|grep running` ]] ; then
-    logit "dropOSD: started new OSD ${osdID}" $log
+    logit "dropOSD: successfully started new OSD ${osdID}" $log
 else
     error_exit "ceph-osd@${osdID}.service failed to start"
 fi
