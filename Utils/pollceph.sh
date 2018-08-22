@@ -45,8 +45,9 @@ while grep HEALTH_WARN /tmp/ceph.status; do
         updatelog "All PGs reported clean; leaving while loop" $log
         break;
     fi
-    uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status | \
-      awk '{print $1}'`
+    let "uncleanPG_cnt=totPG_cnt - cleanPG_cnt"
+    #uncleanPG_cnt=`grep -o '[0-9]\{1,\} pgs unclean' /tmp/ceph.status | \
+    #  awk '{print $1}'`
     updatelog "Total PGs ${totPG_cnt} : unclean PGs ${uncleanPG_cnt}" $log
     recovery_str=`grep recovery: /tmp/ceph.status`
     updatelog "  ${recovery_str}" $log
