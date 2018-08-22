@@ -41,7 +41,7 @@ source "$myPath/vars.shinc"
 # Functions
 source "$myPath/Utils/functions.shinc"
 
-#--------------------------------------
+#++++++++++++++++++++++++++++
 # Housekeeping
 #
 # Check dependencies are met
@@ -76,17 +76,30 @@ updatelog "$var1$var2" $LOGFILE
 ceph osd set noscrub
 ceph osd set nodeep-scrub
 
+#++++++++++++++++++++++++++++
 #>>> PHASE 1: no failures <<<
+#-----------------------------
 # Start the COSbench I/O workload
-pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE" &
-#sleep 100m &           ## DEBUG
-#updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
 
-PIDpbench=$!
-updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGFILE
+### DEBUG
+# sleep 100m &           # DEBUG
+# updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
+######
+
+### Using PBENCH monitoring tool
+# pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE" &
+# PIDpbench=$!
+# updatelog "** pbench-user-benchmark cosbench started as PID: ${PIDpbench}" $LOGFILE
+######
+
+### Without PBENCH
+Utils/cos.sh ${myPath}/failureWorkload.xml $LOGFILE &
+PID=$!
+updatelog "** cosbench started as PID: ${PID}" $LOGFILE
+
 # VERIFY it successfully started
 sleep "${sleeptime}"
-if ps -p $PIDpbench > /dev/null; then
+if ps -p $PID > /dev/null; then
     # match the timing of the other two phases
     t_phase1S="${starttime}${unittime}"            # start duration
     updatelog "START: No Failures - start sleeping ${t_phase1S}" $LOGFILE
@@ -98,7 +111,7 @@ if ps -p $PIDpbench > /dev/null; then
     updatelog "RECOVERY: No Failures - start sleeping ${t_phase1R}" $LOGFILE
     sleep "${t_phase1R}"
 else
-    error_exit "pbench-user-benchmark cosbench FAILED"
+    error_exit "cosbench FAILED"
 fi
 updatelog "END: No Failures - completed sleeping" $LOGFILE
 
@@ -110,6 +123,7 @@ updatelog "$var1$var2" $LOGFILE
 # sleep for closuredelay directive in ioWorkload.xml
 sleep "${closuretime}"
 
+#++++++++++++++++++++++++++++++++++++++++
 #>>> PHASE 2: single osd device failure <<<
 #---------------------------------------
 # BEGIN the OSD device failure sequence
@@ -123,8 +137,8 @@ PIDpollceph1=$!
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ! ps -p $PIDpollceph1 > /dev/null; then
-    kill $PIDpbench
-    error_exit "First pollceph.sh FAILED. Killed pbench: $PIDpbench"
+    kill $PID
+    error_exit "First pollceph.sh FAILED. Killed cosbench: $PID"
 fi
 
 # set the remote logfile name
@@ -159,6 +173,7 @@ sleep "${closuretime}"
 # END - OSD device failure sequence
 #--------------------------------------
 
+#++++++++++++++++++++++++++++++++++++++++
 #>>> PHASE 3: entire osd node failure <<<
 ######---------------------------------
 # The 'OSD node' failure sequence
@@ -174,8 +189,8 @@ PIDpollceph2=$!
 # VERIFY it successfully started
 sleep "${sleeptime}"
 if ! ps -p $PIDpollceph2 > /dev/null; then
-    kill $PIDpbench
-    error_exit "Second pollceph.sh FAILED. Killed pbench: $PIDpbench"
+    kill $PID
+    error_exit "Second pollceph.sh FAILED. Killed cosbench: $PID"
 fi
 
 # take the ifaces down - defined in vars.shinc
@@ -184,21 +199,10 @@ for iface in ${IFACE_arr[@]}; do
     ssh "root@${OSDhostname}" ifdown "${iface}"
 done
 
-# shutdown the OSDhost and set for delayed reboot
-#updatelog "BEGIN: OSDnode - halting" $LOGFILE
-#reboottime="+${failuretime%?}"
-#ssh "root@${OSDhostname}" halt
-#updatelog "OSDhostname ${OSDhostname} halted. Rebooting in ${reboottime} min" $LOGFILE
-#updatelog "OSDhostname ${OSDhostname} halted. Power reset in ${failuretime}" $LOGFILE
-
 # Wait for failuretime
 t_phase3F="${failuretime}${unittime}"
 updatelog "FAILURE: OSDnode - start sleeping ${t_phase3F}" $LOGFILE
 sleep "${t_phase3F}"
-
-# Reboot OSDnode
-#ipmitool -I lanplus -U quads -P 459769 -H mgmt-${OSDhostname}.rdu.openstack.engineering.redhat.com power reset
-#updatelog "OSDhostname ${OSDhostname} ipmi power reset. Rebooting..." $LOGFILE
 
 # bring the ifaces up - defined in vars.shinc
 for iface in ${IFACE_arr[@]}; do
@@ -209,7 +213,7 @@ done
 # Forcebly restart the ceph services - to get the OSDs back up/in
 # and restart the RGW service on the OSDnode
 sleep 2s                           # short pause
-ssh "root@${OSDhostname}" ceph-disk activate-all
+##WHAT TO DO HERE:  ssh "root@${OSDhostname}" ceph-disk activate-all
 ssh "root@${OSDhostname}" systemctl restart ceph-radosgw@rgw.`hostname -s`.service
 
 # Let things run for 'recoverytime'
@@ -227,23 +231,12 @@ updatelog "$var1$var2" $LOGFILE
 # sleep for closuredelay directive in ioWorkload.xml
 sleep "${closuretime}"
 
-#####-----------------------
-# Wait for pbench to complete
-while ps -p $PIDpbench > /dev/null; do
-    updatelog "Waiting for pbench-user-benchmark to complete" $LOGFILE
+# Wait for cos job OR pbench to complete
+while ps -p $PID > /dev/null; do
+    updatelog "Waiting for workload to complete" $LOGFILE
     sleep 1m
 done
-updatelog "pbench-user-benchmark process completed" $LOGFILE
-
-# Copy the LOGFILE, PBENCH and COSbench results to /var/www/html/pub
-Cresults=`ls -tr $cosPATH/archive | tail -n 1`
-Dpath="/var/www/html/pub/$Cresults.$ts"
-mkdir $Dpath
-cp -r $cosPATH/archive/$Cresults $Dpath/.
-Presults=`ls -tr /var/lib/pbench-agent | grep pbench-user-benchmark | tail -n 1`
-cp -r /var/lib/pbench-agent/$Presults $Dpath/.
-
-updatelog "FINALIZING: Pbench and COSbench results copied to $Dpath" $LOGFILE
+updatelog "COSbench process completed" $LOGFILE
 
 ##################################
 # END of I/O workload and monitoring
@@ -279,9 +272,21 @@ updatelog "$var1$var2" $LOGFILE
 
 # update logfile with completion timestamp and end email notifications
 updatelog "** Cleanup END: Recovery complete" $LOGFILE
-echo " " | mail -s "ceph recovery complete" jharriga@redhat.com ekaynar@redhat.com
+#echo " " | mail -s "ceph recovery complete" <email addresses>
 
+### if running w/PBENCH - copy results
+# Copy the LOGFILE, PBENCH and COSbench results to /var/www/html/pub
+# Cresults=`ls -tr $cosPATH/archive | tail -n 1`
+# Dpath="/var/www/html/pub/$Cresults.$ts"
+# mkdir $Dpath
+# cp -r $cosPATH/archive/$Cresults $Dpath/.
+# Presults=`ls -tr /var/lib/pbench-agent | grep pbench-user-benchmark | tail -n 1`
+# cp -r /var/lib/pbench-agent/$Presults $Dpath/.
+#
+# updatelog "FINALIZING: Pbench and COSbench results copied to $Dpath" $LOGFILE
+#
 # copy LOGFILE to results dir
-cp $LOGFILE $Dpath/.
+# cp $LOGFILE $Dpath/.
+######
 
 # END
