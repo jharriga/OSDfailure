@@ -54,4 +54,5 @@ while grep HEALTH_WARN /tmp/ceph.status; do
 done
 
 updatelog "** Recovery completed: POLLCEPH ending" $log
-echo " " | mail -s "POLLCEPH completed" jharriga@redhat.com ekaynar@redhat.com
+#echo " " | mail -s "POLLCEPH completed" <email.addresses>
+
