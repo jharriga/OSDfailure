@@ -31,9 +31,9 @@ DATE='date +%Y/%m/%d:%H:%M:%S'
 updatelog "** POLLCEPH started" $log
 ssh "root@${mon}" ceph status > /tmp/ceph.status
 
-#until grep HEALTH_OK /tmp/ceph.status; do
 # since scrubbing has been disabled, cluster reports HEALTH_WARN status
-while grep HEALTH_WARN /tmp/ceph.status; do
+#while grep HEALTH_WARN /tmp/ceph.status; do
+until grep HEALTH_OK /tmp/ceph.status; do
     sleep "${interval}"
     ssh "root@${mon}" ceph status > /tmp/ceph.status
     totPG_cnt=`grep -o '[0-9]\{1,\} pools, [0-9]\{1,\} pgs' /tmp/ceph.status | \
