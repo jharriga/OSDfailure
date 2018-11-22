@@ -93,7 +93,7 @@ ceph osd set nodeep-scrub
 ######
 
 ### Without PBENCH
-Utils/cos.sh ${myPath}/failureWorkload.xml $LOGFILE &
+"Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE" &
 PID=$!
 updatelog "** cosbench started as PID: ${PID}" $LOGFILE
 
