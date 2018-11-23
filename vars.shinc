@@ -152,17 +152,17 @@ if [ $preparePTYPE == "rep" ]; then
     REPLICATION="rep"
     k=0
     m=0
-    pg_data=8192
-    pg_index=256
-    pg=256
+    pg_data=8192    # determine this value by using PGCALC
+    pg_index=256    # determine this value by using PGCALC
+    pg=256          # determine this value by using PGCALC
     fast_read=0
 elif [ $preparePTYPE == "ec" ]; then
     REPLICATION="ec"
     k=4
     m=2
-    pg_data=4096
-    pg_index=256
-    pg=64
+    pg_data=4096    # determine this value by using PGCALC
+    pg_index=256    # determine this value by using PGCALC
+    pg=256          # determine this value by using PGCALC
     fast_read=0
 else
     echo "Pool type needs to be defined as rep or ec in vars.shinc"; exit
@@ -172,7 +172,7 @@ fi
 # RUNTEST.sh vars
 # List of dependencies - verfied by 'chk_dependencies' function
 DEPENDENCIES_arr=(
-  "pbench-user-benchmark"    # monitoring framework
+#  "pbench-user-benchmark"    # monitoring framework
   "ceph"                     # ceph cmdline tool
   "ansible"                  # used to start/stop RGW svcs
   "systemctl"                # controlling ceph svcs
