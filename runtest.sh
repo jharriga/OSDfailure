@@ -213,12 +213,13 @@ done
 # Forcebly restart the ceph services - to get the OSDs back up/in
 # and restart the RGW service on the OSDnode
 sleep 2s                           # short pause
-if [[ $deployTYPE = *"disk"* ]]; then
-    ssh "root@${OSDhostname}" ceph-disk activate-all
-elif [[ $deployTYPE = *"volume"* ]]; then
+
+if [ `ceph-volume lvm list > /dev/null 2>&1` ]; then
+    # deployTYPE="ceph-volume"
     ssh "root@${OSDhostname}" ceph-volume lvm activate-all
 else
-    error_exit "dropOSD: deployTYPE value invalid"
+    # deployTYPE="ceph-disk"
+    ssh "root@${OSDhostname}" ceph-disk activate-all
 fi
 
 ssh "root@${OSDhostname}" systemctl restart ceph-radosgw@rgw.`hostname -s`.service
