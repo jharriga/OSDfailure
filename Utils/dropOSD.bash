@@ -59,6 +59,7 @@ case "$ostore" in
             activateCMD="ceph-volume lvm activate --filestore --all"
         else
             error_exit "dropOSD: deployTYPE value invalid"
+        ;;
     *bluestore*)
         osdTYPE="bluestore"
         BSdb=`ceph-disk list |grep "\bosd.$osdID\b" | awk '{print substr($11, 1, length($11) - 1)}'`
@@ -76,6 +77,7 @@ case "$ostore" in
             activateCMD="ceph-volume lvm activate --bluestore --all"
         else
             error_exit "dropOSD: deployTYPE value invalid"
+        ;;
     *)
         error_exit "dropOSD: Cluster metadata check CASE Statement failed."
         ;;
