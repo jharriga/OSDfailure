@@ -33,17 +33,18 @@ runtime_sec=$(( (time_mult * phasetime) + sleeptime ))
 # KEY RUNTIME VALUES - used below in PCvalues_arr and RTvalues_arr
 #
 rgwUSER="johndoe:swift"            # username
-rgwURL="rgw:8080"                  # auth_url connection point
-#rgwURL="localhost:5000"           # HAproxy auth_url connection point
-prepareWORKERS=24                  # number of workers to use for preparing the Cluster
-runtestWORKERS=96                  # number of workers for running the I/O Workload
+#rgwURL="rgw:8080"                  # auth_url connection point
+rgwURL="localhost:5000"           # HAproxy auth_url connection point
+prepareWORKERS=68                  # number of workers to use for preparing the Cluster
+runtestWORKERS=68                  # number of workers for running the I/O Workload
 #runtestWORKERS=192       # number of workers for running delWrite Workload
 #runtestWORKERS=240       # number of workers for running HYBRID Workload
 # Object sizes
-objSIZES="h(4|4|34,64|64|33,65536|65536|33)KB"
+#objSIZES="h(4|4|34,64|64|33,65536|65536|33)KB"
+objSIZES="h(1|1|50,64|64|15,8192|8192|15,65536|65536|15,1048576|1048576|5)KB"
 # Number of Containers and Objects
-numCONT=100
-numOBJ=3273
+numCONT=5
+numOBJ=400000
 #numOBJ=43397         # for HYBRID
 #numOBJ=21698         # for delWrite
 numOBJincr=$(( (numOBJ + 1) ))      # increment by 1
@@ -161,7 +162,7 @@ elif [ $preparePTYPE == "ec" ]; then
     m=2
     pg_data=4096
     pg_index=256
-    pg=256
+    pg=64
     fast_read=0
 else
     echo "Pool type needs to be defined as rep or ec in vars.shinc"; exit
@@ -178,9 +179,9 @@ DEPENDENCIES_arr=(
   )
 
 # Ceph cluster node IP addresses
-OSDhostname="10.12.70.112"
-MONhostname="10.12.70.141"
-RGWhostname="rgw"
+OSDhostname="c05-h29-6048r"
+MONhostname="c05-h33-6018r"
+RGWhostname="c07-h01-6048r"
 
 # OSD network interfaces to be taken down
 IFACE_arr=(
@@ -189,7 +190,7 @@ IFACE_arr=(
   )
 
 # COSbench vars
-cosPATH="/root/0.4.2.c4"
+cosPATH="/root/v0.4.2"
 
 # Timestamp logfile
 ts="$(date +%Y%m%d-%H%M%S)"
