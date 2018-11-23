@@ -93,7 +93,7 @@ ceph osd set nodeep-scrub
 ######
 
 ### Without PBENCH
-"Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE" &
+Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE &
 PID=$!
 updatelog "** cosbench started as PID: ${PID}" $LOGFILE
 
@@ -213,7 +213,14 @@ done
 # Forcebly restart the ceph services - to get the OSDs back up/in
 # and restart the RGW service on the OSDnode
 sleep 2s                           # short pause
-##WHAT TO DO HERE:  ssh "root@${OSDhostname}" ceph-disk activate-all
+if [[ $deployTYPE = *"disk"* ]]; then
+    ssh "root@${OSDhostname}" ceph-disk activate-all
+elif [[ $deployTYPE = *"volume"* ]]; then
+    ssh "root@${OSDhostname}" ceph-volume lvm activate-all
+else
+    error_exit "dropOSD: deployTYPE value invalid"
+fi
+
 ssh "root@${OSDhostname}" systemctl restart ceph-radosgw@rgw.`hostname -s`.service
 
 # Let things run for 'recoverytime'
