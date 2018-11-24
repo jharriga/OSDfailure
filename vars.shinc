@@ -191,6 +191,7 @@ IFACE_arr=(
 
 # COSbench vars
 cosPATH="/root/v0.4.2"
+TMPfile="/tmp/jobId.tmp"
 
 # Timestamp logfile
 ts="$(date +%Y%m%d-%H%M%S)"
