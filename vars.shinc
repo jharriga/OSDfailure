@@ -1,3 +1,7 @@
+# NOTE: some vars have no default value set (by design)
+#    these vars are marked with "User edit required"
+#    they must be defined or the script will not execute
+#
 #--------------------------------------------------------------------
 # START GLOBAL VARIABLES
 #
@@ -33,22 +37,28 @@ rgwUSER="johndoe:swift"            # username
 rgwURL="localhost:5000"           # HAproxy auth_url connection point
 
 # Number of COSbench workers: User EDIT Required
-prepareWORKERS=UserEditReqd       # number of workers to use for preparing the Cluster
-runtestWORKERS=UserEditReqd       # number of workers for running the I/O Workload
+prepareWORKERS=       # number of workers to use for preparing the Cluster
+runtestWORKERS=       # number of workers for running the I/O Workload
 # Example values
 #prepareWORKERS=45       # number of workers to use for preparing the Cluster
 #runtestWORKERS=45       # number of workers for running the I/O Workload
+# Check that vars are set
+[ -n "$prepareWORKERS" ] || { echo "vars.shinc: $LINENO - prepareWORKERS not defined"; exit 1}
+[ -n "$runtestWORKERS" ] || { echo "vars.shinc: $LINENO - runtestWORKERS not defined"; exit 1}
 
 # Object sizes
 #objSIZES="h(4|4|34,64|64|33,65536|65536|33)KB"
 objSIZES="h(1|1|50,64|64|15,8192|8192|15,65536|65536|15,1048576|1048576|5)KB"
 
 # Number of Containers and Objects: User EDIT Required
-numCONT=UserEditReqd
-numOBJ=UserEditReqd
+numCONT=       # number of RGW containers (or buckets), to use for workloads
+numOBJ=        # number of RGW objects within each bucket, to use for workloads
 # Example values
 #numCONT=5
 #numOBJ=400000
+# Check that vars are set
+[ -n "$numCONT" ] || { echo "vars.shinc: $LINENO - numCONT not defined"; exit 1}
+[ -n "$numOBJ" ] || { echo "vars.shinc: $LINENO - numOBJ not defined"; exit 1}
 
 numOBJincr=$(( (numOBJ + 1) ))      # increment by 1
 numOBJmax=$(( (numOBJ * 10) ))      # multiply by 10 for highest Object count
@@ -152,28 +162,41 @@ pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default
 numREPLICAS=3                # how many replicas
 preparePTYPE=rep             # Must be rep OR ec
 fast_read=0
+# Replication type, either replicated or erasure coded
+# Values for: pg_data, pg_index, pg - provided by PGCALC (Ceph PG calculator)
 if [ $preparePTYPE == "rep" ]; then
     REPLICATION="rep"
     k=0
     m=0
-    pg_data=8192    # determine this value by using PGCALC
-    pg_index=256    # determine this value by using PGCALC
-    pg=256          # determine this value by using PGCALC
+# Determine by using PGCALC: User EDIT Required
+    pg_data=       # value provided by using PGCALC
+    pg_index=      # value provided by using PGCALC
+    pg=            # value provided by using PGCALC
+# Example values for REPLICATION="rep"
+#    pg_data=8192
+#    pg_index=256
+#    pg=256
 elif [ $preparePTYPE == "ec" ]; then
     REPLICATION="ec"
     k=4
     m=2
 # Determine by using PGCALC: User EDIT Required
-    pg_data=UserEditReqd    # determine this value by using PGCALC
-    pg_index=UserEditReqd    # determine this value by using PGCALC
-    pg=UserEditReqd          # determine this value by using PGCALC
-# Example values
-#    pg_data=4096    # determine this value by using PGCALC
-#    pg_index=256    # determine this value by using PGCALC
-#    pg=256          # determine this value by using PGCALC
+    pg_data=       # determine this value by using PGCALC
+    pg_index=      # determine this value by using PGCALC
+    pg=            # determine this value by using PGCALC
+# Example values for REPLICATION="ec"
+#    pg_data=4096
+#    pg_index=256
+#    pg=256
+
 else
     echo "Pool type needs to be defined as rep or ec in vars.shinc"; exit
 fi
+
+# Check that replication vars are set
+[ -n "$pg_data" ] || { echo "vars.shinc: $LINENO - pg_data not defined"; exit 1}
+[ -n "$pg_index" ] || { echo "vars.shinc: $LINENO - pg_index not defined"; exit 1}
+[ -n "$pg" ] || { echo "vars.shinc: $LINENO - pg not defined"; exit 1}
 
 #------------------------
 # RUNTEST.sh vars
@@ -186,31 +209,39 @@ DEPENDENCIES_arr=(
   )
 
 # Ceph cluster node IP addresses: User Edit Required
-OSDhostname="UserEditReqd"
-OSDhostname2="UserEditReqd"
-MONhostname="UserEditReqd"
-RGWhostname="UserEditReqd"
+OSDhostname=          # first Ceph OSD host to drop in failure phase
+OSDhostname2=         # second Ceph OSD host to drop in failure phase
+MONhostname=          # hostname of a Ceph MON system
+RGWhostname=          # hostname of a Ceph RGW system
 # Example values
 #OSDhostname="c05-h29-6048r"
 #OSDhostname2="c05-h30-6048r"
 #MONhostname="c05-h33-6018r"
 #RGWhostname="c07-h01-6048r"
+# Check that vars are set
+[ -n "$OSDhostname" ] || { echo "vars.shinc: $LINENO - OSDhostname not defined"; exit 1}
+[ -n "$OSDhostname2" ] || { echo "vars.shinc: $LINENO - OSDhostname2 not defined"; exit 1}
+[ -n "$MONhostname" ] || { echo "vars.shinc: $LINENO - MONhostname not defined"; exit 1}
+[ -n "$RGWhostname" ] || { echo "vars.shinc: $LINENO - RGWhostname not defined"; exit 1}
 
 # OSD network interfaces to be taken down
 IFACE_arr=(
-  "UserEditReqd"
-  "UserEditReqd"
   )
 # Example values
 #IFACE_arr=(
 #  "enp4s0f0"
 #  "enp4s0f1"
 #  )
+# Check that vars are set
+if [ ${#IFACE_arr[@]} -eq 0 ]; then echo "vars.shinc line# $LINENO - IFACE_arr not defined"; exit 1 ; fi
 
 # COSbench vars
-cosPATH="UserEditReqd"
+cosPATH=               # full pathname to local COSbench install
 # Example value
 #cosPATH="/root/v0.4.2"
+# Check that vars are set
+[ -n "$cosPATH" ] || { echo "vars.shinc: $LINENO - cosPATH not defined"; exit 1}
+
 TMPfile="/tmp/jobId.tmp"
 
 # Timestamp logfile
