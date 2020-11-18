@@ -1,3 +1,4 @@
+#!/bin/bash
 # NOTE: some vars have no default value set (by design)
 #    these vars are marked with "User edit required"
 #    they must be defined or the script will not execute
