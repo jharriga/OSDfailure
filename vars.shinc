@@ -7,10 +7,10 @@
 # WARNING: if you change these you need to re-run 'writeXML.sh'
 unittime="m"                 # unit for time values (s=sec; m=min; h=hr)
 starttime="10"
-failuretime="10"
-recoverytime="60"
+failuretime="60"
+recoverytime="120"
 phasetime=$(( starttime + failuretime + recoverytime ))
-pollinterval="1m"            # pollceph.sh interval to check ceph status
+pollinterval="5m"            # pollceph.sh interval to check ceph status
 closuretime="30"             # added to end of COSbench workstages
 sleeptime="2"                # CONSTANT always in seconds
 #  Calculate runtime  (in sec)for COSbench workload XML file
@@ -51,8 +51,8 @@ numOBJincr=$(( (numOBJ + 1) ))      # increment by 1
 numOBJmax=$(( (numOBJ * 10) ))      # multiply by 10 for highest Object count
 # Ratios for operation types - MUST add up to 100%
 rdRatio=60
-wrRatio=20
-delRatio=10
+wrRatio=16
+delRatio=14
 listRatio=10
 totalRatio=$(( (rdRatio + wrRatio + delRatio + listRatio) ))
 if [ $totalRatio -ne 100 ]; then
