@@ -87,11 +87,6 @@ ceph osd set nodeep-scrub
 #-----------------------------
 # Start the COSbench I/O workload
 
-### DEBUG
-# sleep 100m &           # DEBUG
-# updatelog "Running in DEBUG mode! Comment 'sleep 100m &' and replace with actual I/O workload"
-######
-
 ### Using PBENCH monitoring tool
 # pbench-user-benchmark "Utils/cos.sh ${myPath}/${RUNTESTxml} $LOGFILE" &
 # PIDpbench=$!
@@ -119,7 +114,7 @@ if ps -p $PID > /dev/null; then
 else
     error_exit "cosbench FAILED"
 fi
-updatelog "END: No Failures - completed sleeping" $LOGFILE
+updatelog "END Phase 1: No Failures - completed sleeping" $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
@@ -130,11 +125,11 @@ updatelog "$var1$var2" $LOGFILE
 sleep "${closuretime}"
 
 #++++++++++++++++++++++++++++++++++++++++
-#>>> PHASE 2: single osd device failure <<<
+#>>> PHASE 2: first OSDnode failure <<<
 #---------------------------------------
-# BEGIN the OSD device failure sequence
+# BEGIN the OSDnode failure sequence
 t_phase2S="${starttime}${unittime}"            # start duration
-updatelog "START: OSDdevice - start sleeping ${t_phase2S}" $LOGFILE
+updatelog "START: first OSDnode - start sleeping ${t_phase2S}" $LOGFILE
 sleep "${t_phase2S}"
 
 # Poll ceph status (in a bkrgd process) 
@@ -147,26 +142,35 @@ if ! ps -p $PIDpollceph1 > /dev/null; then
     error_exit "First pollceph.sh FAILED. Killed cosbench: $PID"
 fi
 
-# set the remote logfile name
-logbase=$(basename $LOGFILE)
-logtmp="/tmp/${logbase}"
-## Drop the OSDdevice using SSH - blocks for failuretime
+# take the ifaces down - defined in vars.shinc
+for iface in ${IFACE_arr[@]}; do
+    updatelog "IFDOWN: Taking iface ${iface} *down* on ${OSDhostname}" $LOGFILE
+    ssh "root@${OSDhostname}" ifdown "${iface}"
+done
+
+# Wait for failuretime
 t_phase2F="${failuretime}${unittime}"
-updatelog "FAILURE: OSDdevice - start sleeping ${t_phase2F}" $LOGFILE
-ssh "root@${OSDhostname}" "bash -s" < Utils/dropOSD.bash "${t_phase2F}" "${logtmp}"
-# bring the remote logfile back and append to LOGFILE
-scp -q "root@${OSDhostname}:${logtmp}" "${logtmp}"
-cat "${logtmp}" >> $LOGFILE
-rm -f "${logtmp}"
+updatelog "FAILURE: OSDnode - start sleeping ${t_phase2F}" $LOGFILE
+sleep "${t_phase2F}"
+
+# bring the ifaces up - defined in vars.shinc
+for iface in ${IFACE_arr[@]}; do
+    updatelog "IFUP: Bringing iface ${iface} *up* on ${OSDhostname}" $LOGFILE
+    ssh "root@${OSDhostname}" ifup "${iface}"
+done
+
+# Forcebly restart the ceph RGW service on the OSDnode
+sleep 2s                           # short pause
+ssh "root@${OSDhostname}" systemctl restart ceph-radosgw.target
 
 # Let things run for 'recoverytime'
 t_phase2R="${recoverytime}${unittime}"
-updatelog "RECOVERY: OSDdevice - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
+updatelog "RECOVERY: OSDnode - sleeping ${t_phase2R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase2R}"
 
 # Now kill off the POLLCEPH background process
 kill $PIDpollceph1
-updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
+updatelog "END: Phase 2 OSDnode - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
@@ -176,17 +180,17 @@ updatelog "$var1$var2" $LOGFILE
 # sleep for closuredelay directive in ioWorkload.xml
 sleep "${closuretime}"
 
-# END - OSD device failure sequence
+# END - OSDnode failure sequence
 #--------------------------------------
 
 #++++++++++++++++++++++++++++++++++++++++
-#>>> PHASE 3: entire osd node failure <<<
+#>>> PHASE 3: second osd node failure <<<
 ######---------------------------------
 # The 'OSD node' failure sequence
 # scrubbing is already disabled
 #
 t_phase3S="${starttime}${unittime}"            # start duration
-updatelog "START: OSDnode - start sleeping ${t_phase3S}" $LOGFILE
+updatelog "START: OSDnode2 - start sleeping ${t_phase3S}" $LOGFILE
 sleep "${t_phase3S}"
 
 # Poll ceph status (in a bkrgd process) 
@@ -199,43 +203,35 @@ if ! ps -p $PIDpollceph2 > /dev/null; then
     error_exit "Second pollceph.sh FAILED. Killed cosbench: $PID"
 fi
 
-# take the ifaces down - defined in vars.shinc
+# take the OSDnode2 ifaces down - defined in vars.shinc
 for iface in ${IFACE_arr[@]}; do
-    updatelog "IFDOWN: Taking iface ${iface} *down* on ${OSDhostname}" $LOGFILE
-    ssh "root@${OSDhostname}" ifdown "${iface}"
+    updatelog "IFDOWN: Taking iface ${iface} *down* on ${OSDhostname2}" $LOGFILE
+    ssh "root@${OSDhostname2}" ifdown "${iface}"
 done
 
 # Wait for failuretime
 t_phase3F="${failuretime}${unittime}"
-updatelog "FAILURE: OSDnode - start sleeping ${t_phase3F}" $LOGFILE
+updatelog "FAILURE: OSDnode2 - start sleeping ${t_phase3F}" $LOGFILE
 sleep "${t_phase3F}"
 
-# bring the ifaces up - defined in vars.shinc
+# bring the OSDnode2 ifaces up - defined in vars.shinc
 for iface in ${IFACE_arr[@]}; do
-    updatelog "IFUP: Bringing iface ${iface} *up* on ${OSDhostname}" $LOGFILE
-    ssh "root@${OSDhostname}" ifup "${iface}"
+    updatelog "IFUP: Bringing iface ${iface} *up* on ${OSDhostname2}" $LOGFILE
+    ssh "root@${OSDhostname2}" ifup "${iface}"
 done
 
 # Forcebly restart the ceph services - to get the OSDs back up/in
 # and restart the RGW service on the OSDnode
 sleep 2s                           # short pause
 
-if [ `ceph-volume lvm list > /dev/null 2>&1` ]; then
-    # deployTYPE="ceph-volume"
-    ssh "root@${OSDhostname}" ceph-volume lvm activate-all
-else
-    # deployTYPE="ceph-disk"
-    ssh "root@${OSDhostname}" ceph-disk activate-all
-fi
-
-ssh "root@${OSDhostname}" systemctl restart ceph-radosgw@rgw.`hostname -s`.service
+ssh "root@${OSDhostname2}" systemctl restart ceph-radosgw.target
 
 # Let things run for 'recoverytime'
 t_phase3R="${recoverytime}${unittime}"
-updatelog "RECOVERY: OSDnode - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
+updatelog "RECOVERY: OSDnode2 - sleeping ${t_phase3R} to monitor cluster re-patriation" $LOGFILE
 sleep "${t_phase3R}"
 
-updatelog "END: OSDnode - Completed waiting." $LOGFILE
+updatelog "END Phase 3: OSDnode2 - Completed waiting." $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
@@ -254,7 +250,7 @@ updatelog "COSbench process completed" $LOGFILE
 
 ##################################
 # END of I/O workload and monitoring
-# However we want a stable cluster so wait for recovery to complete
+# However we want a stable/healthy cluster so wait for recovery to complete
 # NOTE: two ceph vars can be modified to make recovery ops more aggressive (presumably faster)
 #   See - http://lists.ceph.com/pipermail/ceph-users-ceph.com/2015-June/001895.html
 updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LOGFILE
@@ -266,7 +262,7 @@ ceph tell osd.* injectargs '--osd-recovery-sleep-hdd=0' &> /dev/null
 # Poll ceph status (in a blocking foregrd process) 
 Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
-# Cluster is recovered. cleanPGs == totalPGs.
+# pollceph.sh returned, Cluster is recovered (cleanPGs == totalPGs)
 # Re-enable scrubbing
 ceph osd unset noscrub
 ceph osd unset nodeep-scrub
