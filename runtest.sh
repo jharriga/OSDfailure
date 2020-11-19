@@ -4,27 +4,32 @@
 #   Executes the COSbench workloads and injects failures at specific
 #   time periods
 #
+# Script Workflow:
 #   Disable ceph scrubbing 
 #   Start COSbench workload
-#   Sleep for 'starttime' minutes
-#   Stop OSD device and leave it down for 'failuretime' minutes
+#   PHASE 1: no failures
+#     * Sleep for 'starttime' minutes  <-- baseline client I/O perf stats
+#   PHASE 2: drop first OSD node ($OSDhostname)
+#     * Stop OSDhostname NICs and leave them down for 'failuretime' minutes
 #     - poll and record ceph status every 'polltime' minutes
-#   Add the OSD back into cluster and wait for 'recoverytime'
+#     * Add the OSDhostname NICs back into cluster and wait for 'recoverytime'
 #     - poll and record ceph status every 'polltime' minutes
-#   Sleep for 'starttime' minutes
-#   Stop OSD node NICs and leave them down for 'failuretime' minutes
+#     * Sleep for 'starttime' minutes
+#   PHASE 3: drop second OSD node ($OSDhostname2)
+#     * Stop OSDhostname2 NICs and leave them down for 'failuretime' minutes
 #     - poll and record ceph status every 'polltime' minutes
-#   Add the OSD node NICs back into cluster and wait for 'recoverytime'
+#     * Add the OSDhostname2 NICs back into cluster and wait for 'recoverytime'
 #     - poll and record ceph status every 'polltime' minutes
+#     * Sleep for 'starttime' minutes
 #   Stop COSbench workload
-#   Raise recovery default settings accelerate recovery
-#   Wait for recovery and record timestamp for ('active&clean')
+#   Inject more aggresive recovery settings to accelerate recovery
+#   Wait for recovery and record timestamp for (cluster reaches 'active&clean')
 #   Restore default settings: recovery and scrubbing
 #
 #   Proposed variable settings: (see vars.shinc)
 #     - starttime = 10min
-#     - failuretime = 10 min
-#     - recoverytime = 60 min
+#     - failuretime = 60 min
+#     - recoverytime = 120 min
 #     - closuretime = 30s
 #     - polltime = 1 min
 #####################################################################
@@ -55,18 +60,19 @@ fi
 touch $LOGFILE || error_exit "$LINENO: Unable to create LOGFILE."
 updatelog "${PROGNAME} - Created logfile: $LOGFILE" $LOGFILE
 
-# Verify that the OSDnode & MONnode are reachable via ansible
-##ansible all -m ping -i '${OSDhostname},'
+# Verify that the OSDnodes, MONnode & RGWnode are reachable
 host1=`ssh "root@${OSDhostname}" hostname`
 updatelog "> OSDhost is ${OSDhostname} : ${host1}" $LOGFILE
-host2=`ssh "root@${MONhostname}" hostname`
-updatelog "> MONhost is ${MONhostname} : ${host2}" $LOGFILE
-host3=`ssh "root@${RGWhostname}" hostname`
-updatelog "> RGWhost is ${RGWhostname} : ${host3}" $LOGFILE
+host2=`ssh "root@${OSDhostname2}" hostname`
+updatelog "> OSDhost2 is ${OSDhostname2} : ${host2}" $LOGFILE
+host3=`ssh "root@${MONhostname}" hostname`
+updatelog "> MONhost is ${MONhostname} : ${host3}" $LOGFILE
+host4=`ssh "root@${RGWhostname}" hostname`
+updatelog "> RGWhost is ${RGWhostname} : ${host4}" $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
-var2=`echo; ceph df | grep rgw.buckets.data`
+var2=`echo; ceph df | egrep 'rgw.buckets.data|POOL'`
 updatelog "$var1$var2" $LOGFILE
 #
 # END: Housekeeping
@@ -117,7 +123,7 @@ updatelog "END: No Failures - completed sleeping" $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
-var2=`echo; ceph df | grep rgw.buckets.data`
+var2=`echo; ceph df | egrep 'rgw.buckets.data|POOL'`
 updatelog "$var1$var2" $LOGFILE
 
 # sleep for closuredelay directive in ioWorkload.xml
@@ -164,7 +170,7 @@ updatelog "END: OSDdevice - Completed. Stopped POLLCEPH bkgrd process" $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
-var2=`echo; ceph df | grep rgw.buckets.data`
+var2=`echo; ceph df | egrep 'rgw.buckets.data|POOL'`
 updatelog "$var1$var2" $LOGFILE
 
 # sleep for closuredelay directive in ioWorkload.xml
@@ -233,7 +239,7 @@ updatelog "END: OSDnode - Completed waiting." $LOGFILE
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
-var2=`echo; ceph df | grep rgw.buckets.data`
+var2=`echo; ceph df | egrep 'rgw.buckets.data|POOL'`
 updatelog "$var1$var2" $LOGFILE
 
 # sleep for closuredelay directive in ioWorkload.xml
@@ -275,7 +281,7 @@ Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 
 # Record cluster capacity stats
 var1=`echo; ceph df | head -n 5`
-var2=`echo; ceph df | grep rgw.buckets.data`
+var2=`echo; ceph df | egrep 'rgw.buckets.data|POOL'`
 updatelog "$var1$var2" $LOGFILE
 
 # update logfile with completion timestamp and end email notifications
