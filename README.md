@@ -1,23 +1,23 @@
 # OSDfailure
 Scripts for automation of I/O workload and Ceph failure injection.
-Uses COSbench to apply I/O workload; pbench for monitoring and SSH
-scripts (dropOSD.bash) to inject failures.
+Uses COSbench to apply I/O workload and injects OSD node failures.
+Optionally uses pbench for monitoring.
 
 For a writeup of how the ceph cluster was installed see:
  https://github.com/ekaynar/Benchmarks/blob/master/ceph-ansible/README.md
 
+NOTE: vars.shinc requires edits. Some variables are undefined and must be set by the user.
 
 FILE INVENTORY:
-* vars.shinc - global variables
+* vars.shinc - global variables (REQUIRES EDITS BEFORE RUNNING)
 * writeXMLs.sh
-* prepCluster.sh
+* prepCluster.sh - creates pools and RGW user
 * runtest.sh - main driver script which executes COSbench and injects failures
 * XMLtemplates (directory)
   * TMPL_deletewrite.xml
   * TMPL_prepCluster.xml
   * TMPL_hybrid.xml
 * Utils (directory)
-  * dropOSD.bash - script which is run on OSDhostname (drops an OSD device)
   * functions.shinc - collection of functions
   * pollceph.sh - script run on MONhostname (polls ceph status)
 
