@@ -12,6 +12,9 @@ source "$myPath/../vars.shinc"
 # Functions
 source "$myPath/../Utils/functions.shinc"
 
+# check for passed arguments
+[ $# -ne 2 ] && error_exit "cos.sh failed - wrong number of args"
+
 f_name=$1
 log=$2
 OUTPUT=$(sh $cosPATH/cli.sh submit $f_name) &&
