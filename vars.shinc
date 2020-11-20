@@ -16,7 +16,8 @@ function isvarset() {
 
   if [ -z "$varvalue" ]; then
       echo "vars.shinc line#$linenum - $varname must be defined"
-      exit 1
+      UNDEFINED=true
+##      exit 1
   fi
 }
 
@@ -31,13 +32,16 @@ function isarrayset() {
 
   if [ $arraylen -eq 0 ]; then
       echo "vars.shinc line#$linenum - $arrayname must be defined"
-      exit 1
+      UNDEFINED=true
+##      exit 1
   fi
 }
 
 #------------------------------------------------------------------------
 # START GLOBAL VARIABLES
 #
+# GLOBAL trigger var
+UNDEFINED=false
 
 #------------------------
 # Runtimes for various phases
@@ -274,6 +278,17 @@ LOGFILE="${RESULTSDIR}/${PROGNAME}_${ts}.log"
 # Logfile date format, customize it to your wishes
 #   - see man date for help
 DATE='date +%Y/%m/%d:%H:%M:%S'
+
+# Verify that all vars/arrays are defined
+if [ "$UNDEFINED" = "true" ]; then
+    echo "undefined vars found, exiting"
+    exit 1
+elif [ "$UNDEFINED" = "false" ]; then
+    echo "vars defined, continuing... "
+else
+    echo "vars.shin line#$LINENO - undefined vars test error, exiting"
+    exit 1
+fi
 
 # END GLOBAL VARIABLES
 #--------------------------------------------------------------------
