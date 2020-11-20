@@ -1,6 +1,7 @@
 # OSDfailure
 Scripts for automation of I/O workload and Ceph failure injection.
-Uses COSbench to apply I/O workload and injects OSD node failures.
+Uses COSbench to apply I/O workload and injects OSD node failures, by taking down
+network interfaces on OSD nodes.
 Optionally uses pbench for monitoring.
 
 For a writeup of how the ceph cluster was installed see:
