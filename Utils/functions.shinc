@@ -2,12 +2,16 @@
 # FUNCTIONS
 function updatelog {
 # Echoes passed string to LOGFILE and stdout
+# check for passed arguments
+    [ $# -ne 2 ] && error_exit "Function updatelog failed - wrong number of args"
     logfn=$2
 
     echo `$DATE`": $1" 2>&1 | tee -a $logfn
 }
 
 function print_Runtime {
+# check for passed arguments
+  [ $# -ne 1 ] && error_exit "Function print_Runtime failed - wrong number of args"
   logfile=$1
 
   echo "Runtime Environment:" | tee -a $logfile
@@ -37,6 +41,8 @@ function error_exit {
 # Accepts 1 argument:
 #   string containing descriptive error message
 # Copied from - http://linuxcommand.org/wss0150.php
+# check for passed arguments
+    [ $# -ne 1 ] && error_exit "Function error_exit failed - wrong number of args"
     echo "${PROGNAME}: ${1:-"Unknown Error"} ABORTING..." 1>&2
     exit 1
 }
