@@ -8,10 +8,11 @@ For a writeup of how the ceph cluster was installed see:
  https://github.com/ekaynar/Benchmarks/blob/master/ceph-ansible/README.md
 
 NOTE: vars.shinc requires edits. Some variables are undefined and must be set by the user.
+NOTE2: you have to apply executable permissions (chmod 755 *.sh) recursively
 
 FILE INVENTORY:
 * vars.shinc - global variables (REQUIRES EDITS BEFORE RUNNING)
-* writeXMLs.sh - creates COSbench workload files
+* writeXML.sh - creates COSbench workload files
 * prepCluster.sh - creates pools and RGW user, then pre-fills the cluster
 * runtest.sh - main driver script which executes COSbench and injects failures
 * XMLtemplates (directory)
