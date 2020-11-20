@@ -10,16 +10,17 @@ NOTE: vars.shinc requires edits. Some variables are undefined and must be set by
 
 FILE INVENTORY:
 * vars.shinc - global variables (REQUIRES EDITS BEFORE RUNNING)
-* writeXMLs.sh
-* prepCluster.sh - creates pools and RGW user
+* writeXMLs.sh - creates COSbench workload files
+* prepCluster.sh - creates pools and RGW user, then pre-fills the cluster
 * runtest.sh - main driver script which executes COSbench and injects failures
 * XMLtemplates (directory)
   * TMPL_deletewrite.xml
   * TMPL_prepCluster.xml
   * TMPL_hybrid.xml
 * Utils (directory)
+  * cos.sh - submits COSbench workloads (called by runtest.sh)
   * functions.shinc - collection of functions
-  * pollceph.sh - script run on MONhostname (polls ceph status)
+  * pollceph.sh - polls ceph status (called by runtest.sh)
 
 
 USAGE:
