@@ -11,8 +11,8 @@
 <!-- 
 THREE WORKSTAGES:
 1) No failures
-2) First OSD node failure (drop network interface)
-3) Second OSD node failure (drop network interface)
+2) OSD device failure
+3) OSD node failure (drop network interface)
 -->
 
 <!-- Use object sizes as defined in vars.shinc	 -->
@@ -28,7 +28,7 @@ THREE WORKSTAGES:
         </work>
     </workstage>
 
-    <workstage name="osd_node1" closuredelay="RUNTESTclosuretime">
+    <workstage name="osd_device" closuredelay="RUNTESTclosuretime">
         <work name="phase2" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
  	    <operation name="readOP" type="read" ratio="RUNTESTrdRatio" config="RUNTESTrdConf" />
             <operation name="listOP" type="list" ratio="RUNTESTlistRatio" config="RUNTESTlistConf" />
@@ -37,7 +37,7 @@ THREE WORKSTAGES:
         </work>
      </workstage>
 
- <workstage name="osd_node2" closuredelay="RUNTESTclosuretime">
+ <workstage name="osd_node" closuredelay="RUNTESTclosuretime">
          <work name="phase3" workers="RUNTESTworkers" runtime="RUNTESTruntime" >
  	    <operation name="readOP" type="read" ratio="RUNTESTrdRatio" config="RUNTESTrdConf" />
             <operation name="listOP" type="list" ratio="RUNTESTlistRatio" config="RUNTESTlistConf" />
