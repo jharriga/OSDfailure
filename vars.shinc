@@ -220,7 +220,7 @@ elif [ $preparePTYPE == "ec" ]; then
 #    pg=256         # value provided by using PGCALC
 
 else
-    echo "Pool type needs to be defined as rep or ec in vars.shinc"; exit
+    echo "preparePTYPE var needs to be defined as rep or ec in vars.shinc"; exit
 fi
 
 # Check that replication vars are set
