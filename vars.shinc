@@ -192,8 +192,11 @@ pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default
           "default.rgw.gc" "default.rgw.buckets.data" "default.rgw.buckets.index" "default.rgw.buckets.extra" \
           "default.rgw.log" "default.rgw.meta" "default.rgw.intent-log" "default.rgw.usage" "default.rgw.users" \
           "default.rgw.users.email" "default.rgw.users.swift" "default.rgw.users.uid")
-numREPLICAS=3                # how many replicas
-preparePTYPE=rep             # Must be rep OR ec
+# Set replication type (replicated or erasure-coded): User EDIT Required
+preparePTYPE=ec              # Must be rep OR ec
+isvarset "$preparePTYPE" "preparePTYPE" "$LINENO"
+
+numREPLICAS=3                # how many replicas (if replicated)
 fast_read=0
 # Replication type, either replicated or erasure coded
 # Values for: pg_data, pg_index, pg - provided by PGCALC (Ceph PG calculator)
