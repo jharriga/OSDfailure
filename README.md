@@ -27,6 +27,6 @@ FILE INVENTORY:
 
 USAGE:
 * Edit 'vars.shinc' for your environment (hostnames; runtime; obj sizes ...)
-* run 'writeXMLs.sh'    <-- create COSbench workload files
+* run 'writeXML.sh'    <-- create COSbench workload files
 * run 'prepCluster.sh'    <-- create pools and fill the cluster
 * run 'runtest.sh'    <-- run the test and record results
