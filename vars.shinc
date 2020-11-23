@@ -194,7 +194,11 @@ pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default
           "default.rgw.users.email" "default.rgw.users.swift" "default.rgw.users.uid")
 # Set replication type (replicated or erasure-coded): User EDIT Required
 #preparePTYPE=ec              # Must be rep OR ec
-isvarset "$preparePTYPE" "preparePTYPE" "$LINENO"
+if [ -z "$preparePTYPE" ]; then
+    echo "vars.shinc line#$LINENO - preparePTYPE must be defined"
+    echo "Pool replication type (preparePTYPE) needs to be defined as rep or ec"
+    exit 1
+fi
 
 numREPLICAS=3                # how many replicas (if replicated)
 fast_read=0
