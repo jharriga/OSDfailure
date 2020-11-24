@@ -113,30 +113,6 @@ wrOBJ="s(${numOBJincr},${numOBJmax})"
 delOBJ="s(1,${numOBJmax})"
 #------------------------
 # writeXML.sh variables
-PREPAREtemplate="XMLtemplates/TMPL_prepCluster.xml"
-PREPARExml="prepWorkload.xml"
-# prepCluster: pre-existing keys in the PREPAREtemplate file
-declare -a PCkeys_arr=("PREPAREstorage_type"
-                       "PREPAREtimeout"
-                       "PREPAREretry"
-                       "PREPAREauth_type"
-                       "PREPAREconfig"
-                       "PREPAREworkers"
-                       "PREPAREsizes"
-                       "PREPAREnumCont"
-                       "PREPAREnumObj"
-                       )
-declare -a PCvalues_arr=("swift"               # storage type
-                         "60000"               # timeout
-                         "3"                   # retries
-                         "swauth"              # auth_type
-                         # config: a bit messy since SED requires "/" be escaped
-                         "username=${rgwUSER};password=EMPTY;auth_url=http:\/\/${rgwURL}\/auth\/1.0"
-                         "${prepareWORKERS}"   # number of workers
-                         "${objSIZES}"         # Object sizes
-                         "${numCONT}"          # number of Containers
-                         "${numOBJ}"           # number of Objects
-                         )
 
 # RUNTEST settings
 #RUNTESTtemplate="XMLtemplates/TMPL_hybrid.xml"
@@ -185,53 +161,6 @@ declare -a RTvalues_arr=("swift"               # storage_type
                          "${closuretime}"      # workstage closuredelay
                          )
  
-#------------------------
-# PREPCLUSTER.sh variables
-longPAUSE="400s"
-pool_list=("default.rgw.users.keys" "default.rgw.data.root" ".rgw.root" "default.rgw.control" \
-          "default.rgw.gc" "default.rgw.buckets.data" "default.rgw.buckets.index" "default.rgw.buckets.extra" \
-          "default.rgw.log" "default.rgw.meta" "default.rgw.intent-log" "default.rgw.usage" "default.rgw.users" \
-          "default.rgw.users.email" "default.rgw.users.swift" "default.rgw.users.uid")
-# Set replication type (replicated or erasure-coded): User EDIT Required
-#preparePTYPE=ec              # Must be rep OR ec
-if [ -z "$preparePTYPE" ]; then
-    echo "vars.shinc line#$LINENO - preparePTYPE must be defined"
-    echo "Pool replication type (preparePTYPE) needs to be defined as rep or ec"
-    exit 1
-fi
-
-numREPLICAS=3                # how many replicas (if replicated)
-fast_read=0
-# Replication type, either replicated or erasure coded
-# Values for: pg_data, pg_index, pg - provided by PGCALC (Ceph PG calculator)
-if [ $preparePTYPE == "rep" ]; then
-    REPLICATION="rep"
-    k=0
-    m=0
-# Determine by using PGCALC: User EDIT Required
-# Example values for REPLICATION="rep"
-#    pg_data=8192     # value provided by using PGCALC
-#    pg_index=256     # value provided by using PGCALC
-#    pg=256           # value provided by using PGCALC
-elif [ $preparePTYPE == "ec" ]; then
-    REPLICATION="ec"
-    k=4
-    m=2
-# Determine by using PGCALC: User EDIT Required
-# Example values for REPLICATION="ec"
-#    pg_data=4096   # value provided by using PGCALC
-#    pg_index=256   # value provided by using PGCALC
-#    pg=256         # value provided by using PGCALC
-
-else
-    echo "preparePTYPE var needs to be defined as rep or ec in vars.shinc"; exit
-fi
-
-# Check that replication vars are set
-isvarset "$pg_data" "pg_data" "$LINENO"
-isvarset "$pg_index" "pg_index" "$LINENO"
-isvarset "$pg" "pg" "$LINENO"
-
 #------------------------
 # RUNTEST.sh vars
 # List of dependencies - verfied by 'chk_dependencies' function
