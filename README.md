@@ -14,9 +14,8 @@ FILE INVENTORY:
 * vars.shinc - global variables (REQUIRES EDITS BEFORE RUNNING)
 * writeXML.sh - creates COSbench workload files
 * runtest.sh - main driver script which executes COSbench and injects failures
-* XMLtemplates (directory)
+* XMLtemplates (directory)  <-- set with "RUNTESTtemplate" value (vars.shinc)
   * TMPL_deletewrite.xml
-  * TMPL_prepCluster.xml
   * TMPL_hybrid.xml
 * Utils (directory)
   * cos.sh - submits COSbench workloads (called by runtest.sh)
@@ -26,5 +25,6 @@ FILE INVENTORY:
 USAGE:
 * Edit 'vars.shinc' for your environment (hostnames; runtime; obj sizes ...)
 * Execute 'writeXML.sh'    <-- create COSbench workload files
-* Edit COSbench workload files (*.xml) <-- add SWIFT user credentials
+* Edit COSbench workload file (ioWorkload.xml) <-- add SWIFT user credentials
+>> config="username=johndoe:swift;password=EMPTY
 * Execute 'runtest.sh'    <-- run the test and record results
