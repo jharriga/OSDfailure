@@ -13,13 +13,13 @@ Executes these three phases (workstages):
 1.     - poll and record ceph status every 'polltime' minutes
 1.     * Sleep for 'starttime' minutes
 1.   PHASE 3: drop second OSD node ($OSDhostname2)
-NOTE: this branch (releasetesting) requires that a pre-filled Ceph cluster already
-      be installed and SWIFT user credentials are available
-
-NOTE2: vars.shinc requires edits. Some variables are undefined and must be set by the user
-
-NOTE3: you have to apply executable permissions (chmod 755 *.sh) recursively
-
+> NOTE: this branch (releasetesting) requires that a pre-filled Ceph cluster already
+>      be installed and SWIFT user credentials are available
+>
+> NOTE2: vars.shinc requires edits. Some variables are undefined and must be set by the user
+>
+> NOTE3: you have to apply executable permissions (chmod 755 *.sh) recursively
+>
 FILE INVENTORY:
 * vars.shinc - global variables (REQUIRES EDITS BEFORE RUNNING)
 * writeXML.sh - creates COSbench workload files
