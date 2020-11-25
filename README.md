@@ -24,7 +24,7 @@ FILE INVENTORY:
 * vars.shinc - global variables (REQUIRES EDITS BEFORE RUNNING)
 * writeXML.sh - creates COSbench workload files
 * runtest.sh - main driver script which executes COSbench and injects failures
-* XMLtemplates (directory)  <-- set with "RUNTESTtemplate" value (vars.shinc)
+* XMLtemplates (directory)  <-- "RUNTESTtemplate" (vars.shinc) = ioWorkload.xml
   * TMPL_deletewrite.xml
   * TMPL_hybrid.xml
 * Utils (directory)
