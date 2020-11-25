@@ -303,10 +303,10 @@ rm $TMPfile                         # cleanup
 # Presults=`ls -tr /var/lib/pbench-agent | grep pbench-user-benchmark | tail -n 1`
 # cp -r /var/lib/pbench-agent/$Presults $Dpath/.
 #
-# updatelog "FINALIZING: Pbench and COSbench results copied to $Dpath" $LOGFILE
+# updatelog "FINALIZING: Pbench and COSbench results copied to $Dpath" $LOGFINAL
 #
 # copy LOGFILE to results dir
-# cp $LOGFILE $Dpath/.
+# cp $LOGFINAL $Dpath/.
 ######
 
 # END
