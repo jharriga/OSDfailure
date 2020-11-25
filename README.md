@@ -4,15 +4,15 @@ Uses COSbench to apply I/O workload and injects OSD node failures, by taking dow
 network interfaces on OSD nodes.
 Optionally uses pbench for monitoring.
 Executes these three phases (workstages):
-   PHASE 1: no failures
-     * Sleep for 'starttime' minutes  <-- baseline client I/O perf stats
-   PHASE 2: drop first OSD node ($OSDhostname)
-     * Stop OSDhostname NICs and leave them down for 'failuretime' minutes
-     - poll and record ceph status every 'polltime' minutes
-     * Add the OSDhostname NICs back into cluster and wait for 'recoverytime'
-     - poll and record ceph status every 'polltime' minutes
-     * Sleep for 'starttime' minutes
-   PHASE 3: drop second OSD node ($OSDhostname2)
+1.   PHASE 1: no failures
+1.     * Sleep for 'starttime' minutes  <-- baseline client I/O perf stats
+1.   PHASE 2: drop first OSD node ($OSDhostname)
+1.     * Stop OSDhostname NICs and leave them down for 'failuretime' minutes
+1.     - poll and record ceph status every 'polltime' minutes
+1.     * Add the OSDhostname NICs back into cluster and wait for 'recoverytime'
+1.     - poll and record ceph status every 'polltime' minutes
+1.     * Sleep for 'starttime' minutes
+1.   PHASE 3: drop second OSD node ($OSDhostname2)
 NOTE: this branch (releasetesting) requires that a pre-filled Ceph cluster already
       be installed and SWIFT user credentials are available
 
