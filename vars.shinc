@@ -115,8 +115,8 @@ delOBJ="s(1,${numOBJmax})"
 # writeXML.sh variables
 
 # RUNTEST settings
-#RUNTESTtemplate="XMLtemplates/TMPL_hybrid.xml"
-RUNTESTtemplate="XMLtemplates/TMPL_deleteWrite.xml"
+RUNTESTtemplate="XMLtemplates/TMPL_hybrid.xml"
+#RUNTESTtemplate="XMLtemplates/TMPL_deleteWrite.xml"
 RUNTESTxml="ioWorkload.xml"
 # runtest: pre-existing keys in the RUNTESTtemplate file
 declare -a RTkeys_arr=("RUNTESTstorage_type"
