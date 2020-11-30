@@ -24,14 +24,8 @@
 #   Stop COSbench workload
 #   Inject more aggresive recovery settings to accelerate recovery
 #   Wait for recovery and record timestamp for (cluster reaches 'active&clean')
-#   Restore default settings: recovery and scrubbing
+#   Restore Ceph scrubbing
 #
-#   Proposed variable settings: (see vars.shinc)
-#     - starttime = 10min
-#     - failuretime = 60 min
-#     - recoverytime = 120 min
-#     - closuretime = 30s
-#     - polltime = 1 min
 #####################################################################
 
 # Bring in other script files
@@ -254,10 +248,6 @@ updatelog "COSbench process completed" $LOGFILE
 # NOTE: two ceph vars can be modified to make recovery ops more aggressive (presumably faster)
 #   See - http://lists.ceph.com/pipermail/ceph-users-ceph.com/2015-June/001895.html
 updatelog "** Cluster idle. Cleanup START: Waiting for cleanPGs == totalPGs" $LOGFILE
-updatelog "** Setting aggressive recovery values" $LOGFILE
-ceph tell osd.* injectargs '--osd-max-backfills=10' &> /dev/null
-ceph tell osd.* injectargs '--osd-recovery-max-active=15' &> /dev/null
-ceph tell osd.* injectargs '--osd-recovery-sleep-hdd=0' &> /dev/null
 
 # Poll ceph status (in a blocking foregrd process) 
 Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
@@ -266,10 +256,6 @@ Utils/pollceph.sh "${pollinterval}" "${LOGFILE}" "${MONhostname}"
 # Re-enable scrubbing
 ceph osd unset noscrub
 ceph osd unset nodeep-scrub
-# Set recovery settings back to defaults
-ceph tell osd.* injectargs '--osd-max-backfills=1' &> /dev/null
-ceph tell osd.* injectargs '--osd-recovery-max-active=3' &> /dev/null
-ceph tell osd.* injectargs '--osd-recovery-sleep-hdd=0.1' &> /dev/null
 
 # Call pollceph one final time, expecting HEALTH_OK and immediate return
 sleep "${sleeptime}"
