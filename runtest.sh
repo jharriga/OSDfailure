@@ -22,7 +22,6 @@
 #     - poll and record ceph status every 'polltime' minutes
 #     * Sleep for 'starttime' minutes
 #   Stop COSbench workload
-#   Inject more aggresive recovery settings to accelerate recovery
 #   Wait for recovery and record timestamp for (cluster reaches 'active&clean')
 #   Restore Ceph scrubbing
 #
