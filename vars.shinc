@@ -75,10 +75,8 @@ rgwURL="localhost:5000"           # HAproxy auth_url connection point
 
 # Number of COSbench workers: User EDIT Required
 # Example values
-#prepareWORKERS=45       # number of workers to use for preparing the Cluster
 #runtestWORKERS=45       # number of workers for running the I/O Workload
 # Check that vars are set
-isvarset "$prepareWORKERS" "prepareWORKERS" "$LINENO"
 isvarset "$runtestWORKERS" "runtestWORKERS" "$LINENO"
 
 # Object sizes
