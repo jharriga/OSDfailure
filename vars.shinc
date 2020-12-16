@@ -183,7 +183,7 @@ isvarset "$OSDhostname2" "OSDhostname2" "$LINENO"
 isvarset "$MONhostname" "MONhostname" "$LINENO"
 isvarset "$RGWhostname" "RGWhostname" "$LINENO"
 
-# OSD System network interfaces to be taken down (on OSDhostname and OSDhostname2)
+# OSD System network interfaces to be taken down (on OSDhostname and OSDhostname2) : User EDIT Required
 IFACE_arr=(
   )
 # Example values
@@ -194,7 +194,7 @@ IFACE_arr=(
 # Check that array is set
 isarrayset "${#IFACE_arr[@]}" "IFACE_arr" "$LINENO"
 
-# COSbench pathname var
+# COSbench pathname var : User EDIT Required
 # Example value
 #cosPATH="/root/v0.4.2"      # full pathname to local COSbench install
 # Check that var is set
